@@ -57,14 +57,14 @@ public class ApropriationPage extends PageObject {
     }
 
     /**
-     * Apropriate task.
-     * @param tasks task daily summary
+     * Ajustar as informacoes da apropriacao task.
+     * @param tasks tasks
      */
-    public void escolherProjetos(final List<TaskRecord> tasks) {
+    public void ajustarApropriacoes(final List<TaskRecord> tasks) {
 
         for (final TaskRecord taskRecord : tasks) {
             final Task task = taskRecord.getTask();
-            if (!task.isProjetoVazio()) {
+            if (!task.isAjustarInformacoesApropriacao()) {
                 continue;
             }
 
@@ -82,7 +82,7 @@ public class ApropriationPage extends PageObject {
             sleep(3000);
 
             task.setProjeto(escolherProjeto(taskRecord));
-            task.setProjetoEscolhidoUsuario(true);
+            task.setInformacoesAjustadasUsuario(true);
 
             select("AP_Servico", task.getProjeto());
             sleep(3000);

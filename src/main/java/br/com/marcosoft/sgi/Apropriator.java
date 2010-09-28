@@ -1,8 +1,8 @@
 package br.com.marcosoft.sgi;
 
-import java.io.BufferedReader;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COLUNA_NOME_PROJETO;
+
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,14 +25,11 @@ import br.com.marcosoft.sgi.po.LoginPage;
 import br.com.marcosoft.sgi.po.Sgi;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.ApplicationProperties;
-import br.com.marcosoft.sgi.util.Util;
 
 /**
  * Apropriar SGI.
  */
 public class Apropriator {
-
-    private static final int COLUNA_NOME_PROJETO = 5;
 
     public static void main(final String[] args) throws Exception {
         final File inputFile = parseArgs(args);
@@ -57,8 +54,9 @@ public class Apropriator {
         "sgiApropriator");
 
     public void doItForMePlease(final File inputFile) throws IOException {
+        final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
+        this.apropriationFile = apropriationFileParser.parse();
 
-        this.apropriationFile = parseApropriationFile(inputFile);
         final Map<String, String> config = this.apropriationFile.getConfig();
         verificarCompatibilidade(config.get("version"));
 
@@ -77,7 +75,6 @@ public class Apropriator {
         }
 
         SeleniumSupport.stopSelenium();
-
 
     }
 
@@ -115,7 +112,7 @@ public class Apropriator {
 
         //Setar projetos nas atividades
         for (final TaskDailySummary tds : tasksSum) {
-            if (tds.getTask().isProjetoEscolhidoUsuario()) {
+            if (tds.getTask().isInformacoesAjustadasUsuario()) {
                 out.println(String.format("set|%s|%s|%s", COLUNA_NOME_PROJETO, tds.getTask().getNumeroLinha(), tds.getTask().getProjeto()));
             }
         }
@@ -126,7 +123,7 @@ public class Apropriator {
     private String selecionarProjetosEscolhidosUsuario(final List<TaskDailySummary> tasksSum) {
         String novosProjetos = "";
         for (final TaskDailySummary tds : tasksSum) {
-            if (tds.getTask().isProjetoEscolhidoUsuario()) {
+            if (tds.getTask().isInformacoesAjustadasUsuario()) {
                 if (novosProjetos.length() == 0) {
                     novosProjetos += aspas(tds.getTask().getProjeto());
                 } else {
@@ -149,7 +146,7 @@ public class Apropriator {
         final ApropriationPage apropriationPage = irParaPaginaApropriacao();
 
         if (precisaEscolherProjeto(tasks)) {
-            apropriationPage.escolherProjetos(tasks);
+            apropriationPage.ajustarApropriacoes(tasks);
         }
 
         final List<TaskDailySummary> tasksSum = sumTasks(tasks);
@@ -198,7 +195,7 @@ public class Apropriator {
 
     private boolean precisaEscolherProjeto(final List<TaskRecord> tasks) {
         for (final TaskRecord taskRecord : tasks) {
-            if (taskRecord.getTask().isProjetoVazio()) {
+            if (taskRecord.getTask().isAjustarInformacoesApropriacao()) {
                 return true;
             }
         }
@@ -257,53 +254,6 @@ public class Apropriator {
             }
         }
         return null;
-    }
-
-    private ApropriationFile parseApropriationFile(final File file) throws IOException {
-        final ApropriationFile ret = new ApropriationFile();
-
-        final BufferedReader input = new BufferedReader(new FileReader(file));
-        String line = null;
-        while ((line = input.readLine()) != null) {
-            final String[] fields = line.split("\\|");
-            if ("cfg".equals(fields[0])) {
-                if (fields.length != 3) continue;
-                ret.getConfig().put(fields[1].trim(), fields[2].trim());
-
-            } else if ("reg".equals(fields[0])) {
-                if (fields.length != 14) continue;
-                final int duracao = Integer.parseInt(fields[13]);
-                if (duracao == 0) continue;
-
-                final TaskRecord taskRecord = new TaskRecord();
-                taskRecord.setData(Util.parseDate("dd/MM/yy", fields[1]));
-                taskRecord.setDuracao(duracao);
-                taskRecord.setTask(parseTask(fields));
-                ret.getTasksRecords().add(taskRecord);
-            }
-        }
-        input.close();
-        return ret;
-
-    }
-
-   //  0     1      2    3    4        5            6        7              8           9         10   11    12    13
-   // reg|17/05/10|row|SUNFJ|Sim|(P)- ESAF|Implementação|Normal|Análise de Sistemas|Novo Sistema|At 1|08:00|09:00|60
-    private Task parseTask(final String[] fields) {
-        final Task task = new Task();
-        task.setNumeroLinha(fields[2]);
-        task.setUgCliente(fields[3]);
-        task.setLotacaoSuperior(!"Não".equals(fields[4]));
-        task.setProjeto(fields[COLUNA_NOME_PROJETO]);
-        task.setMacro(fields[6]);
-        task.setTipoHora(fields[7]);
-        task.setInsumo(fields[8]);
-        task.setTipoInsumo(fields[9]);
-        task.setDescricao(fields[10]);
-        task.setHoraInicio(fields[11]);
-        task.setHoraTermino(fields[12]);
-
-        return task;
     }
 
     private void verifyDefaults(final List<TaskRecord> tasks) {
