@@ -23,96 +23,106 @@ public class Task {
     private String tipoInsumo;
 
     private String descricao;
-    
+
     private String horaInicio;
-    
+
     private String horaTermino;
+
+    private boolean ajustarInformacoes;
+
+    public boolean isAjustarInformacoes() {
+        return this.ajustarInformacoes;
+    }
+
+    public void setAjustarInformacoes(final boolean ajustarInformacoes) {
+        this.ajustarInformacoes = ajustarInformacoes;
+    }
 
     /**
      * Numero da linha na planilha.
      */
     private String numeroLinha;
 
-    private boolean projetoEscolhidoUsuario;
+    private boolean informacoesAjustadasUsuario;
 
     public String getId() {
-        return descricao + ugCliente + lotacaoSuperior + projeto + macro + tipoHora
-            + insumo + tipoInsumo;
+        return this.descricao + this.ugCliente + this.lotacaoSuperior + this.projeto + this.macro + this.tipoHora
+            + this.insumo + this.tipoInsumo;
     }
 
     public String getUgCliente() {
-        return ugCliente;
+        return this.ugCliente;
     }
 
-    public void setUgCliente(String ugCliente) {
+    public void setUgCliente(final String ugCliente) {
         this.ugCliente = ugCliente;
     }
 
     public boolean isLotacaoSuperior() {
-        return lotacaoSuperior;
+        return this.lotacaoSuperior;
     }
 
-    public void setLotacaoSuperior(boolean lotacaoSuperior) {
+    public void setLotacaoSuperior(final boolean lotacaoSuperior) {
         this.lotacaoSuperior = lotacaoSuperior;
     }
 
     public String getProjeto() {
-        return projeto;
+        return this.projeto;
     }
 
-    public void setProjeto(String projeto) {
+    public void setProjeto(final String projeto) {
         this.projeto = projeto;
     }
 
     public String getMacro() {
-        return macro;
+        return this.macro;
     }
 
-    public void setMacro(String macro) {
+    public void setMacro(final String macro) {
         this.macro = macro;
     }
 
     public String getTipoHora() {
-        return tipoHora;
+        return this.tipoHora;
     }
 
-    public void setTipoHora(String tipoHora) {
+    public void setTipoHora(final String tipoHora) {
         this.tipoHora = tipoHora;
     }
 
     public String getInsumo() {
-        return insumo;
+        return this.insumo;
     }
 
-    public void setInsumo(String insumo) {
+    public void setInsumo(final String insumo) {
         this.insumo = insumo;
     }
 
     public String getTipoInsumo() {
-        return tipoInsumo;
+        return this.tipoInsumo;
     }
 
-    public void setTipoInsumo(String tipoInsumo) {
+    public void setTipoInsumo(final String tipoInsumo) {
         this.tipoInsumo = tipoInsumo;
     }
 
     public String getDescricao() {
-        return descricao;
+        return this.descricao;
     }
 
-    public void setDescricao(String atividade) {
+    public void setDescricao(final String atividade) {
         this.descricao = atividade;
     }
 
 
     /** {@inheritDoc} */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
         if (obj instanceof Task) {
-            Task that = (Task) obj;
+            final Task that = (Task) obj;
             return new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .isEquals();
@@ -132,42 +142,42 @@ public class Task {
         return this.descricao;
     }
 
-    public void setNumeroLinha(String numeroLinha) {
+    public void setNumeroLinha(final String numeroLinha) {
         this.numeroLinha = numeroLinha;
     }
-    
+
     public String getNumeroLinha() {
-        return numeroLinha;
+        return this.numeroLinha;
     }
 
-    public boolean isProjetoVazio() {
-        String projeto = getProjeto().trim();
+    public boolean isAjustarInformacoesApropriacao() {
+        final String projeto = getProjeto().trim();
         return projeto.length() == 0 || projeto.equals("Vou escolher no SGI");
     }
 
     public String getHoraInicio() {
-        return horaInicio;
+        return this.horaInicio;
     }
 
-    public void setHoraInicio(String horaInicio) {
+    public void setHoraInicio(final String horaInicio) {
         this.horaInicio = horaInicio;
     }
 
     public String getHoraTermino() {
-        return horaTermino;
+        return this.horaTermino;
     }
 
-    public void setHoraTermino(String horaTermino) {
+    public void setHoraTermino(final String horaTermino) {
         this.horaTermino = horaTermino;
     }
 
-    public void setProjetoEscolhidoUsuario(boolean projetoModificado) {
-        this.projetoEscolhidoUsuario = projetoModificado;        
-    }
-    
-    public boolean isProjetoEscolhidoUsuario() {
-        return projetoEscolhidoUsuario;
+    public void setInformacoesAjustadasUsuario(final boolean informacoesAjustadasUsuario) {
+        this.informacoesAjustadasUsuario = informacoesAjustadasUsuario;
     }
 
-    
+    public boolean isInformacoesAjustadasUsuario() {
+        return this.informacoesAjustadasUsuario;
+    }
+
+
 }
