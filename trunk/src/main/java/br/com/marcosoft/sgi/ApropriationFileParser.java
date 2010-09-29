@@ -35,12 +35,12 @@ public class ApropriationFileParser {
                 if (fields.length != REG_QUANTIDADE_CAMPOS)
                     continue;
 
-                final int duracao = Integer.parseInt(fields[COLUNA_DURACAO]);
+                final int duracao = Integer.parseInt(fields[COL_REG_DURACAO]);
                 if (duracao == 0)
                     continue;
 
                 final TaskRecord taskRecord = new TaskRecord();
-                taskRecord.setData(Util.parseDate("dd/MM/yy", fields[COLUNA_DATA]));
+                taskRecord.setData(Util.parseDate("dd/MM/yy", fields[COL_REG_DATA]));
                 taskRecord.setDuracao(duracao);
                 taskRecord.setTask(parseTask(fields));
                 ret.getTasksRecords().add(taskRecord);
@@ -50,23 +50,20 @@ public class ApropriationFileParser {
         return ret;
     }
 
-    // 0 1 2 3 4 5 6 7 8 9 10 11 12 13
-    // reg|17/05/10|row|SUNFJ|Sim|(P)- ESAF|Implementação|Normal|Análise de
-    // Sistemas|Novo Sistema|At 1|08:00|09:00|60
     private Task parseTask(final String[] fields) {
         final Task task = new Task();
-        task.setAjustarInformacoes("Sim".equals(fields[COLUNA_AJUSTAR_INFORMACOES]));
-        task.setNumeroLinha(fields[COLUNA_NUMERO_LINHA]);
-        task.setUgCliente(fields[COLUNA_UG_CLIENTE]);
-        task.setLotacaoSuperior(!"Não".equals(fields[COLUNA_LOTACAO_SUPERIOR]));
-        task.setProjeto(fields[COLUNA_NOME_PROJETO]);
-        task.setMacro(fields[COLUNA_MACRO]);
-        task.setTipoHora(fields[COLUNA_TIPO_HORA]);
-        task.setInsumo(fields[COLUNA_INSUMO]);
-        task.setTipoInsumo(fields[COLUNA_TIPO_INSUMO]);
-        task.setDescricao(fields[COLUNA_DESCRICAO]);
-        task.setHoraInicio(fields[COLUNA_HORA_INICIO]);
-        task.setHoraTermino(fields[COLUNA_HORA_TERMINO]);
+        task.setAjustarInformacoes("Sim".equals(fields[COL_REG_AJUSTAR_INFORMACOES]));
+        task.setNumeroLinha(fields[COL_REG_NUMERO_LINHA]);
+        task.setUgCliente(fields[COL_REG_UG_CLIENTE]);
+        task.setLotacaoSuperior(!"Não".equals(fields[COL_REG_LOTACAO_SUPERIOR]));
+        task.setProjeto(fields[COL_REG_NOME_PROJETO]);
+        task.setMacro(fields[COL_REG_MACRO]);
+        task.setTipoHora(fields[COL_REG_TIPO_HORA]);
+        task.setInsumo(fields[COL_REG_INSUMO]);
+        task.setTipoInsumo(fields[COL_REG_TIPO_INSUMO]);
+        task.setDescricao(fields[COL_REG_DESCRICAO]);
+        task.setHoraInicio(fields[COL_REG_HORA_INICIO]);
+        task.setHoraTermino(fields[COL_REG_HORA_TERMINO]);
         return task;
     }
 

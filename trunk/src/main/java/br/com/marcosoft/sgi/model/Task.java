@@ -43,7 +43,23 @@ public class Task {
      */
     private String numeroLinha;
 
-    private boolean informacoesAjustadasUsuario;
+    private boolean controlarMudancas;
+
+    private boolean ugClienteMudou;
+
+    private boolean lotacaoSuperiorMudou;
+
+    private boolean projetoMudou;
+
+    private boolean macroMudou;
+
+    private boolean tipoHoraMudou;
+
+    private boolean insumoMudou;
+
+    private boolean tipoInsumoMudou;
+
+    private boolean descricaoMudou;
 
     public String getId() {
         return this.descricao + this.ugCliente + this.lotacaoSuperior + this.projeto + this.macro + this.tipoHora
@@ -55,6 +71,7 @@ public class Task {
     }
 
     public void setUgCliente(final String ugCliente) {
+        this.ugClienteMudou = (this.controlarMudancas && !ugCliente.equals(this.ugCliente));
         this.ugCliente = ugCliente;
     }
 
@@ -63,6 +80,7 @@ public class Task {
     }
 
     public void setLotacaoSuperior(final boolean lotacaoSuperior) {
+        this.lotacaoSuperiorMudou = (this.controlarMudancas && !lotacaoSuperior == this.lotacaoSuperior);
         this.lotacaoSuperior = lotacaoSuperior;
     }
 
@@ -71,6 +89,7 @@ public class Task {
     }
 
     public void setProjeto(final String projeto) {
+        this.projetoMudou = (this.controlarMudancas && !projeto.equals(this.projeto));
         this.projeto = projeto;
     }
 
@@ -79,6 +98,7 @@ public class Task {
     }
 
     public void setMacro(final String macro) {
+        this.macroMudou = (this.controlarMudancas && !macro.equals(this.macro));
         this.macro = macro;
     }
 
@@ -87,6 +107,7 @@ public class Task {
     }
 
     public void setTipoHora(final String tipoHora) {
+        this.tipoHoraMudou = (this.controlarMudancas && !tipoHora.equals(this.tipoHora));
         this.tipoHora = tipoHora;
     }
 
@@ -95,6 +116,7 @@ public class Task {
     }
 
     public void setInsumo(final String insumo) {
+        this.insumoMudou = (this.controlarMudancas && !insumo.equals(this.insumo));
         this.insumo = insumo;
     }
 
@@ -103,6 +125,7 @@ public class Task {
     }
 
     public void setTipoInsumo(final String tipoInsumo) {
+        this.tipoInsumoMudou = (this.controlarMudancas && !tipoInsumo.equals(this.tipoInsumo));
         this.tipoInsumo = tipoInsumo;
     }
 
@@ -110,8 +133,9 @@ public class Task {
         return this.descricao;
     }
 
-    public void setDescricao(final String atividade) {
-        this.descricao = atividade;
+    public void setDescricao(final String descricao) {
+        this.descricaoMudou = (this.controlarMudancas && !descricao.equals(this.descricao));
+        this.descricao = descricao;
     }
 
 
@@ -150,11 +174,6 @@ public class Task {
         return this.numeroLinha;
     }
 
-    public boolean isAjustarInformacoesApropriacao() {
-        final String projeto = getProjeto().trim();
-        return projeto.length() == 0 || projeto.equals("Vou escolher no SGI");
-    }
-
     public String getHoraInicio() {
         return this.horaInicio;
     }
@@ -171,12 +190,46 @@ public class Task {
         this.horaTermino = horaTermino;
     }
 
-    public void setInformacoesAjustadasUsuario(final boolean informacoesAjustadasUsuario) {
-        this.informacoesAjustadasUsuario = informacoesAjustadasUsuario;
+    public boolean isInformacoesAjustadasUsuario() {
+        return this.ugClienteMudou || this.lotacaoSuperiorMudou || this.projetoMudou
+            || this.macroMudou || this.tipoHoraMudou || this.insumoMudou
+            || this.tipoInsumoMudou || this.descricaoMudou;
     }
 
-    public boolean isInformacoesAjustadasUsuario() {
-        return this.informacoesAjustadasUsuario;
+    public void setControlarMudancas(final boolean controlarMudancas) {
+        this.controlarMudancas = controlarMudancas;
+    }
+
+    public boolean isUgClienteMudou() {
+        return this.ugClienteMudou;
+    }
+
+    public boolean isLotacaoSuperiorMudou() {
+        return this.lotacaoSuperiorMudou;
+    }
+
+    public boolean isProjetoMudou() {
+        return this.projetoMudou;
+    }
+
+    public boolean isMacroMudou() {
+        return this.macroMudou;
+    }
+
+    public boolean isTipoHoraMudou() {
+        return this.tipoHoraMudou;
+    }
+
+    public boolean isInsumoMudou() {
+        return this.insumoMudou;
+    }
+
+    public boolean isTipoInsumoMudou() {
+        return this.tipoInsumoMudou;
+    }
+
+    public boolean isDescricaoMudou() {
+        return this.descricaoMudou;
     }
 
 

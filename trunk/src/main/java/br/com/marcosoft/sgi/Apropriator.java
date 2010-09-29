@@ -1,6 +1,7 @@
 package br.com.marcosoft.sgi;
 
-import static br.com.marcosoft.sgi.ColunasPlanilha.COLUNA_NOME_PROJETO;
+
+import static br.com.marcosoft.sgi.ColunasPlanilha.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -58,7 +59,10 @@ public class Apropriator {
         this.apropriationFile = apropriationFileParser.parse();
 
         final Map<String, String> config = this.apropriationFile.getConfig();
-        verificarCompatibilidade(config.get("version"));
+        if (!verificarCompatibilidade(config.get("version"))) {
+            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
+            return;
+        }
 
         final String firefoxProfile = config.get("firefoxProfile");
 
@@ -78,10 +82,9 @@ public class Apropriator {
 
     }
 
-    private void verificarCompatibilidade(final String version) {
-        Double.parseDouble(version);
-        //getAppVersion()
-        // TODO Auto-generated method stub
+    private boolean verificarCompatibilidade(final String strVersion) {
+        final double version = Double.parseDouble(strVersion);
+        return (version >= 0.4);
     }
 
     private void gravarArquivoRetorno(final String exportFolder, final List<TaskDailySummary> tasksSum) {
@@ -98,44 +101,49 @@ public class Apropriator {
         //Marcar como registrado
         for (final TaskDailySummary tds : tasksSum) {
             if (tds.isApropriado()) {
-                for (final String numeroLinha : tds.getNumerosLinhas()) {
-                    out.println(String.format("mcr|%s", numeroLinha));
+                for (final Task task : tds.getTasks()) {
+                    out.println(String.format("mcr|%s", task.getNumeroLinha()));
                 }
             }
         }
 
-        //Alterar lista de projetos
-        final String novosProjetos = selecionarProjetosEscolhidosUsuario(tasksSum);
-        if (novosProjetos.length() != 0) {
-            out.println(String.format("alp|%s", novosProjetos));
-        }
-
-        //Setar projetos nas atividades
+        //Atualizar lista de validacoes/set text
         for (final TaskDailySummary tds : tasksSum) {
-            if (tds.getTask().isInformacoesAjustadasUsuario()) {
-                out.println(String.format("set|%s|%s|%s", COLUNA_NOME_PROJETO, tds.getTask().getNumeroLinha(), tds.getTask().getProjeto()));
+            for (final Task task : tds.getTasks()) {
+                if (task.isDescricaoMudou()) {
+                    out.println(String.format("set|%s|%s|%s", COL_REG_DESCRICAO, task.getNumeroLinha(), task.getDescricao()));
+                }
+                if (task.isLotacaoSuperior()) {
+                    out.println(String.format("set|%s|%s|%s", COL_REG_LOTACAO_SUPERIOR, task.getNumeroLinha(), task.isLotacaoSuperior() ? "Sim" : "Não"));
+                }
+                if (task.isTipoHoraMudou()) {
+                    out.println(String.format("set|%s|%s|%s", COL_REG_TIPO_HORA, task.getNumeroLinha(), task.getTipoHora()));
+                }
+                if (task.isInsumoMudou()) {
+                    out.println(String.format("alv|%s|%s", COL_REG_INSUMO ,task.getInsumo()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_INSUMO, task.getNumeroLinha(), task.getInsumo()));
+                }
+                if (task.isMacroMudou()) {
+                    out.println(String.format("alv|%s|%s", COL_REG_MACRO ,task.getMacro()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_MACRO, task.getNumeroLinha(), task.getMacro()));
+                }
+                if (task.isProjetoMudou()) {
+                    out.println(String.format("alv|%s|%s", COL_REG_NOME_PROJETO ,task.getProjeto()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_NOME_PROJETO, task.getNumeroLinha(), task.getProjeto()));
+                }
+                if (task.isTipoInsumoMudou()) {
+                    out.println(String.format("alv|%s|%s", COL_REG_TIPO_INSUMO ,task.getTipoInsumo()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_TIPO_INSUMO, task.getNumeroLinha(), task.getTipoInsumo()));
+                }
+                if (task.isUgClienteMudou()) {
+                    out.println(String.format("alv|%s|%s", COL_REG_UG_CLIENTE ,task.getUgCliente()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_UG_CLIENTE, task.getNumeroLinha(), task.getUgCliente()));
+                }
             }
         }
+
         out.close();
 
-    }
-
-    private String selecionarProjetosEscolhidosUsuario(final List<TaskDailySummary> tasksSum) {
-        String novosProjetos = "";
-        for (final TaskDailySummary tds : tasksSum) {
-            if (tds.getTask().isInformacoesAjustadasUsuario()) {
-                if (novosProjetos.length() == 0) {
-                    novosProjetos += aspas(tds.getTask().getProjeto());
-                } else {
-                    novosProjetos += ";" + aspas(tds.getTask().getProjeto());
-                }
-            }
-        }
-        return novosProjetos;
-    }
-
-    private String aspas(final String projeto) {
-        return "\"" + projeto + "\"";
     }
 
     /**
@@ -145,7 +153,7 @@ public class Apropriator {
     private List<TaskDailySummary> apropriate(final List<TaskRecord> tasks) {
         final ApropriationPage apropriationPage = irParaPaginaApropriacao();
 
-        if (precisaEscolherProjeto(tasks)) {
+        if (precisaAjustarInformacoesApropriacao(tasks)) {
             apropriationPage.ajustarApropriacoes(tasks);
         }
 
@@ -193,9 +201,9 @@ public class Apropriator {
         return apropriationPage;
     }
 
-    private boolean precisaEscolherProjeto(final List<TaskRecord> tasks) {
+    private boolean precisaAjustarInformacoesApropriacao(final List<TaskRecord> tasks) {
         for (final TaskRecord taskRecord : tasks) {
-            if (taskRecord.getTask().isAjustarInformacoesApropriacao()) {
+            if (taskRecord.getTask().isAjustarInformacoes()) {
                 return true;
             }
         }
@@ -226,13 +234,12 @@ public class Apropriator {
             if (tds == null) {
                 tds = new TaskDailySummary();
                 tds.setData(activity.getData());
-                tds.setTask(activity.getTask());
                 tds.setSum(activity.getDuracao());
                 ret.add(tds);
             } else {
                 tds.setSum(tds.getSum() + activity.getDuracao());
             }
-            tds.getNumerosLinhas().add(activity.getTask().getNumeroLinha());
+            tds.getTasks().add(activity.getTask());
         }
 
         return ret;
@@ -249,7 +256,7 @@ public class Apropriator {
     private TaskDailySummary searchTaskAndData(final List<TaskDailySummary> tasksSummary, final Task task,
         final Date data) {
         for (final TaskDailySummary tds : tasksSummary) {
-            if (tds.getTask().equals(task) && tds.getData().equals(data)) {
+            if (task.equals(tds.getFirstTask()) && tds.getData().equals(data)) {
                 return tds;
             }
         }
