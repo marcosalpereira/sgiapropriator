@@ -1,8 +1,9 @@
 package br.com.marcosoft.sgi.po;
 
+import java.util.Date;
 import java.util.List;
 
-import br.com.marcosoft.sgi.InputProjectDialog;
+import br.com.marcosoft.sgi.EsperarAjustesUsuario;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.model.TaskRecord;
@@ -21,10 +22,16 @@ public class ApropriationPage extends PageObject {
      * @param taskDailySummary task daily summary
      */
     public void apropriate(final TaskDailySummary taskDailySummary) {
-        final Task task = taskDailySummary.getTask();
+        taskToPage(taskDailySummary.getData(), taskDailySummary.getFirstTask(), taskDailySummary.getSum());
+        getSelenium().click("btnIncluir");
+        waitForPageToLoad();
+    }
 
-        select("AP_dt_ap", Util.formatDate(taskDailySummary.getData()));
-        if (taskDailySummary.getTask().isLotacaoSuperior()) {
+    private void taskToPage(final Date data, final Task task, final int qtdMinutos) {
+
+        select("AP_dt_ap", Util.formatDate(data));
+
+        if (task.isLotacaoSuperior()) {
             if (!getSelenium().isChecked("ck_Lot_Superior")) {
                 clickAndWait("ck_Lot_Superior");
             }
@@ -34,71 +41,70 @@ public class ApropriationPage extends PageObject {
             }
         }
 
-        select("AP_ug_cliente", task.getUgCliente());
-
-        select("AP_Servico", task.getProjeto());
-        sleep(3000);
-
-        type("AP_horas", Util.formatMinutes(taskDailySummary.getSum()));
-        if (task.getMacro().length() != 0) {
-            select("AP_MacroAtividade", task.getMacro());
-        }
-        select("AP_Tipo_hora", task.getTipoHora());
-
-        select("AP_Insumo", task.getInsumo());
-        if (getSelenium().isEditable("AP_Tipo_Insumo")) {
-            select("AP_Tipo_Insumo", task.getTipoInsumo());
-        }
-        type("AP_obs", task.getDescricao());
-
-        getSelenium().click("btnIncluir");
-        waitForPageToLoad();
-
-    }
-
-    /**
-     * Ajustar as informacoes da apropriacao task.
-     * @param tasks tasks
-     */
-    public void ajustarApropriacoes(final List<TaskRecord> tasks) {
-
-        for (final TaskRecord taskRecord : tasks) {
-            final Task task = taskRecord.getTask();
-            if (!task.isAjustarInformacoesApropriacao()) {
-                continue;
-            }
-
-            if (task.isLotacaoSuperior()) {
-                if (!getSelenium().isChecked("ck_Lot_Superior")) {
-                    clickAndWait("ck_Lot_Superior");
-                }
-            } else {
-                if (getSelenium().isChecked("ck_Lot_Superior")) {
-                    clickAndWait("ck_Lot_Superior");
-                }
-            }
-
+        if (task.getUgCliente().length() != 0) {
             select("AP_ug_cliente", task.getUgCliente());
             sleep(3000);
+        }
 
-            task.setProjeto(escolherProjeto(taskRecord));
-            task.setInformacoesAjustadasUsuario(true);
-
+        if (task.getProjeto().length() != 0) {
             select("AP_Servico", task.getProjeto());
             sleep(3000);
         }
 
+        type("AP_horas", Util.formatMinutes(qtdMinutos));
+
+        if (task.getMacro().length() != 0) {
+            select("AP_MacroAtividade", task.getMacro());
+        }
+
+        if (task.getTipoHora().length() != 0) {
+            select("AP_Tipo_hora", task.getTipoHora());
+        }
+
+        if (task.getInsumo().length() != 0) {
+            select("AP_Insumo", task.getInsumo());
+        }
+
+        if (task.getTipoInsumo().length() != 0 && getSelenium().isEditable("AP_Tipo_Insumo")) {
+            select("AP_Tipo_Insumo", task.getTipoInsumo());
+        }
+
+        type("AP_obs", task.getDescricao());
     }
 
-    private String escolherProjeto(final TaskRecord taskRecord) throws CanceladoPeloUsuarioException {
-        final String[] projetosPagina = getSelenium().getSelectOptions("AP_Servico");
-        final String[] projetos = new String[projetosPagina.length - 1];
-        System.arraycopy(projetosPagina, 1, projetos, 0, projetos.length);
-        final boolean selecionarProjeto = InputProjectDialog.selecionarProjeto(taskRecord);
-        if (!selecionarProjeto) {
+    /**
+     * Ajustar as informacoes da apropriacao task.t
+     * @param tasks tasks
+     */
+    public void ajustarApropriacoes(final List<TaskRecord> tasks) {
+        for (final TaskRecord taskRecord : tasks) {
+            final Task task = taskRecord.getTask();
+            if (task.isAjustarInformacoes()) {
+                taskToPage(taskRecord.getData(), task, taskRecord.getDuracao());
+                esperarAjustesUsuario();
+                atualizarAtividadeComInformacoesUsuario(task);
+            }
+        }
+
+    }
+
+    private void atualizarAtividadeComInformacoesUsuario(final Task task) {
+        task.setControlarMudancas(true);
+        task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
+        task.setUgCliente(getSelenium().getText("AP_ug_cliente"));
+        task.setProjeto(getSelenium().getText("AP_Servico"));
+        task.setMacro(getSelenium().getText("AP_MacroAtividade"));
+        task.setTipoHora(getSelenium().getText("AP_Tipo_hora"));
+        task.setInsumo(getSelenium().getText("AP_Insumo"));
+        task.setTipoInsumo(getSelenium().getText("AP_Tipo_Insumo"));
+        task.setDescricao(getSelenium().getText("AP_obs"));
+        task.setControlarMudancas(false);
+    }
+
+    private void esperarAjustesUsuario() throws CanceladoPeloUsuarioException {
+        if (!EsperarAjustesUsuario.esperarAjustes()) {
             throw new CanceladoPeloUsuarioException();
         }
-        return null;
     }
 
     public void mostrarApropriacoesPeriodo() {

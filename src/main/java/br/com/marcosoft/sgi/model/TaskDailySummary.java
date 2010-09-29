@@ -14,51 +14,47 @@ public class TaskDailySummary {
 
     private Date data;
 
-    private Task task;
+    private List<Task> tasks = new ArrayList<Task>();
 
     private int sum;
 
     private boolean apropriado;
-    
-    private List<String> numerosLinhas = new ArrayList<String>();
 
     public Date getData() {
-        return data;
+        return this.data;
     }
 
-    public void setData(Date data) {
+    public void setData(final Date data) {
         this.data = data;
     }
 
-    public Task getTask() {
-        return task;
+    public Task getFirstTask() {
+        return this.tasks.get(0);
     }
 
-    public void setTask(Task task) {
-        this.task = task;
+    public void setTasks(final List<Task> tasks) {
+        this.tasks = tasks;
     }
 
     public int getSum() {
-        return sum;
+        return this.sum;
     }
 
-    public void setSum(int duracao) {
+    public void setSum(final int duracao) {
         this.sum = duracao;
     }
 
-
-
     /** {@inheritDoc} */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
         if (obj instanceof TaskDailySummary) {
-            TaskDailySummary that = (TaskDailySummary) obj;
+            final TaskDailySummary that = (TaskDailySummary) obj;
             return new EqualsBuilder()
                 .append(this.getData(), that.getData())
-                .append(this.getTask(), that.getTask())
+                .append(this.getFirstTask(), that.getFirstTask())
                 .isEquals();
         }
 
@@ -70,25 +66,25 @@ public class TaskDailySummary {
     public int hashCode() {
         return new HashCodeBuilder(123, 1235)
             .append(this.getData())
-            .append(this.getTask())
+            .append(this.getFirstTask())
             .toHashCode();
     }
 
     @Override
     public String toString() {
-        return this.task + "," + this.data + "," + this.sum;
+        return this.tasks + "," + this.data + "," + this.sum;
     }
 
-    public void setApropriado(boolean apropriado) {
+    public void setApropriado(final boolean apropriado) {
         this.apropriado = apropriado;
     }
-    
+
     public boolean isApropriado() {
-        return apropriado;
+        return this.apropriado;
     }
-    
-    public List<String> getNumerosLinhas() {
-        return numerosLinhas;
+
+    public List<Task> getTasks() {
+        return this.tasks;
     }
 
 }
