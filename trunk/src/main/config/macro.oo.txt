@@ -2,17 +2,19 @@
 '0.2 - fix: exec script linux
 '0.3 - processar arquivo retorno
 '0.4 - ajustar informacoes no SGI
-Const VERSION = "0.3"
+Const VERSION = "0.4"
 
 Const COL_REG = 0
 Const COL_DATE = 1
 Const COL_WEEK_DAY = 2
 Const COL_ADJUST_SGI = 3
+Const COL_MACRO = 7
 Const COL_ACTIVITY = 11
 Const COL_TIME_INI = 12
 Const COL_TIME_END = 13
 Const COL_MINUTES = 14
 
+Const FIRST_ROW = 2
 Const MAX_ROW = 208
 
 sub main
@@ -231,7 +233,7 @@ sub export
   
   'Export data
   oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(0))
-  For row = 1 to MAX_ROW 
+  For row = FIRST_ROW to MAX_ROW 
     if (getText(COL_DATE, row) = "") Then
        Exit For
     End if
@@ -329,15 +331,20 @@ Sub marcarComoRegistrado(numeroLinha as integer)
 End Sub
 
 Sub atualizarListaValidacao(coluna as integer, novaOpcao as String)
+    Dim formulaAnterior as string
+    dim pos as integer
+    Dim range as String
+    
     oDoc = ThisComponent
     oSheet = oDoc.getSheets.getByIndex(0)
-    Dim range as String
     range = rangeParaColuna(coluna)
     Set CellRange = oSheet.getCellRangeByName(range)
     Set newValidation = CellRange.Validation
-    if (instr(newValidation.Formula1, novaOpcao) = 0) Then
+    formulaAnterior = CellRange.Validation.Formula1
+    pos = instr(formulaAnterior, novaOpcao)
+    if (pos = 0) Then
       newValidation.Type = com.sun.star.sheet.ValidationType.LIST
-      newValidation.Formula1 = newValidation.Formula1 & ";" & aspas(novaOpcao)
+      newValidation.Formula1 = formulaAnterior & ";" & aspas(novaOpcao)
       newValidation.setOperator com.sun.star.Sheet.ConditionOperator.EQUAL
       CellRange.Validation = newValidation
     End if
@@ -345,7 +352,9 @@ Sub atualizarListaValidacao(coluna as integer, novaOpcao as String)
 End sub
 
 Sub rangeParaColuna(coluna as integer) as String
-    rangeParaColuna = chr(64 + coluna) & "2:F208"
+    Dim colStr as String
+    colStr = colNumber2Letter(coluna)
+    rangeParaColuna =  colStr & FIRST_ROW & ":" & colStr & MAX_ROW
 End Sub
 
 Sub aspas(str As String) As String  
