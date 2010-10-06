@@ -91,13 +91,13 @@ public class ApropriationPage extends PageObject {
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {
         task.setControlarMudancas(true);
         task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
-        task.setUgCliente(getSelenium().getText("AP_ug_cliente"));
-        task.setProjeto(getSelenium().getText("AP_Servico"));
-        task.setMacro(getSelenium().getText("AP_MacroAtividade"));
-        task.setTipoHora(getSelenium().getText("AP_Tipo_hora"));
-        task.setInsumo(getSelenium().getText("AP_Insumo"));
-        task.setTipoInsumo(getSelenium().getText("AP_Tipo_Insumo"));
-        task.setDescricao(getSelenium().getText("AP_obs"));
+        task.setUgCliente(getSelenium().getSelectedLabel("AP_ug_cliente"));
+        task.setProjeto(getSelenium().getSelectedLabel("AP_Servico"));
+        task.setMacro(getSelenium().getSelectedLabel("AP_MacroAtividade"));
+        task.setTipoHora(getSelenium().getSelectedLabel("AP_Tipo_hora"));
+        task.setInsumo(getSelenium().getSelectedLabel("AP_Insumo"));
+        task.setTipoInsumo(getSelenium().getSelectedLabel("AP_Tipo_Insumo"));
+        task.setDescricao(getSelenium().getValue("AP_obs"));
         task.setControlarMudancas(false);
     }
 
