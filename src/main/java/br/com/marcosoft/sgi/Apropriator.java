@@ -282,13 +282,15 @@ public class Apropriator {
             if (task.getTipoHora().length() == 0) {
                 task.setTipoHora(defaultTipoHora);
             }
+            
+            if (!task.isAjustarInformacoes()) {
+                if (task.getInsumo().length() == 0) {
+                    task.setInsumo(defaultInsumo);
+                }
 
-            if (task.getInsumo().length() == 0) {
-                task.setInsumo(defaultInsumo);
-            }
-
-            if (task.getTipoInsumo().length() == 0) {
-                task.setTipoInsumo(defaultTipoInsumo);
+                if (task.getTipoInsumo().length() == 0) {
+                    task.setTipoInsumo(defaultTipoInsumo);
+                }
             }
         }
     }
