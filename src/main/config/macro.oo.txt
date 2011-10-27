@@ -16,7 +16,7 @@ Const COL_MINUTES = 14
 Const COL_HOURS = 15
 Const COL_TODO  = 16
 
-Const FIRST_ROW = 2
+Const FIRST_ROW = 1
 Const MAX_ROW = 208
 
 sub main

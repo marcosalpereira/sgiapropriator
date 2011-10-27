@@ -1,11 +1,10 @@
 package br.com.marcosoft.sgi.selenium;
 
-import java.io.File;
-
-import org.seleniuminspector.SeleniumFactory;
-import org.seleniuminspector.SeleniumHolder;
-import org.seleniuminspector.SeleniumWithServerAutostartFactory;
-
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverBackedSelenium;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.firefox.internal.ProfilesIni;
 
 import com.thoughtworks.selenium.Selenium;
 
@@ -13,42 +12,31 @@ import com.thoughtworks.selenium.Selenium;
  * Selenium Support.
  */
 public class SeleniumSupport {
+    private static Selenium selenium;
+
+    public static Selenium getSelenium() {
+        return selenium;
+    }
 
     /**
      * Inicializa o Selenium.
      */
     public static void initSelenium(String profile) {
-        final SeleniumHolder seleniumHolder = SeleniumHolder.getInstance();
+        final String browserUrl = System.getProperty("sgi.url", "https://sgi.portalcorporativo.serpro/");
 
-        final String browserUrl = "https://sgi.portalcorporativo.serpro/";
-        final SeleniumFactory factory;
-        File profileFile = checkProfile(profile);
+        final ProfilesIni allProfiles = new ProfilesIni();
+        final FirefoxProfile firefoxProfile = allProfiles.getProfile(profile);
+        final WebDriver driver = new FirefoxDriver(firefoxProfile);
 
-        if (profileFile != null) {
-            factory = new MySeleniumFactory(9999, "*chrome", browserUrl, profileFile);
-        } else {
-            factory = new SeleniumWithServerAutostartFactory(9999, "*chrome", browserUrl);
-        }
-        seleniumHolder.setSeleniumFactory(factory);
-        seleniumHolder.getSelenium().start();
-        seleniumHolder.getSelenium().windowMaximize();
-    }
+//        System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+//        final WebDriver driver = new ChromeDriver();
 
-    private static File checkProfile(String profile) {
-        if (profile != null && profile.length() != 0) {
-            File ret = null;
-            ret = new File(profile);
-            if (ret.exists()) {
-                return ret;
-            }
-        }
-        return null;
+        selenium = new WebDriverBackedSelenium(driver, browserUrl);
+
     }
 
     public static void stopSelenium() {
-        Selenium selenium = SeleniumHolder.getInstance().getSelenium();
         selenium.stop();
-        selenium.shutDownSeleniumServer();
     }
 
     /**
@@ -58,7 +46,7 @@ public class SeleniumSupport {
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             return;
         }
     }
