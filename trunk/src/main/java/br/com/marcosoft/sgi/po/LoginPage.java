@@ -11,16 +11,16 @@ public class LoginPage extends PageObject {
             clickAndWait("btnAvancar");
         } else {
             JOptionPane.showMessageDialog(null, "Por favor, digite a senha e clique em avancar");
-            getSelenium().setCursorPosition("tbSenha", "0");
+            //TODO NotSupported IN V2.0 getSelenium().setCursorPosition("tbSenha", "0");
         }
         waitForCorrectLogin();
         return new HomePage();
     }
 
-
     private void waitForCorrectLogin() {
         for(;;) {
             if (getSelenium().isElementPresent("menulist")) {
+                clearAlerts();
                 sleep(2000);
                 break;
             }

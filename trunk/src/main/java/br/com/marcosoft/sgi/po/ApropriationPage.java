@@ -22,14 +22,14 @@ public class ApropriationPage extends PageObject {
      * @param taskDailySummary task daily summary
      */
     public void apropriate(final TaskDailySummary taskDailySummary) {
-        taskToPage(taskDailySummary.getData(), taskDailySummary.getFirstTask(), taskDailySummary.getSum());
+        taskToPage(taskDailySummary.getData(), taskDailySummary.getFirstTask(), taskDailySummary.getSum(), false);
         getSelenium().click("btnIncluir");
         waitForPageToLoad();
     }
 
-    private void taskToPage(final Date data, final Task task, final int qtdMinutos) {
+    private void taskToPage(final Date data, final Task task, final int qtdMinutos, boolean checkEditableFirst) {
 
-        select("AP_dt_ap", Util.formatDate(data));
+        select(checkEditableFirst, "AP_dt_ap", Util.formatDate(data));
 
         if (task.isLotacaoSuperior()) {
             if (!getSelenium().isChecked("ck_Lot_Superior")) {
@@ -42,31 +42,31 @@ public class ApropriationPage extends PageObject {
         }
 
         if (task.getUgCliente().length() != 0) {
-            select("AP_ug_cliente", task.getUgCliente());
+            select(checkEditableFirst, "AP_ug_cliente", task.getUgCliente());
             sleep(3000);
         }
 
         if (task.getProjeto().length() != 0) {
-            select("AP_Servico", task.getProjeto());
+            select(checkEditableFirst, "AP_Servico", task.getProjeto());
             sleep(3000);
         }
 
         type("AP_horas", Util.formatMinutes(qtdMinutos));
 
         if (task.getMacro().length() != 0) {
-            select("AP_MacroAtividade", task.getMacro());
+            select(checkEditableFirst, "AP_MacroAtividade", task.getMacro());
         }
 
         if (task.getTipoHora().length() != 0) {
-            select("AP_Tipo_hora", task.getTipoHora());
+            select(checkEditableFirst, "AP_Tipo_hora", task.getTipoHora());
         }
 
         if (task.getInsumo().length() != 0) {
-            select("AP_Insumo", task.getInsumo());
+            select(checkEditableFirst, "AP_Insumo", task.getInsumo());
         }
 
         if (task.getTipoInsumo().length() != 0 && getSelenium().isEditable("AP_Tipo_Insumo")) {
-            select("AP_Tipo_Insumo", task.getTipoInsumo());
+            select(checkEditableFirst, "AP_Tipo_Insumo", task.getTipoInsumo());
         }
 
         type("AP_obs", task.getDescricao());
@@ -77,15 +77,30 @@ public class ApropriationPage extends PageObject {
      * @param tasks tasks
      */
     public void ajustarApropriacoes(final List<TaskRecord> tasks) {
+        desabilitarBotoes();
+
         for (final TaskRecord taskRecord : tasks) {
             final Task task = taskRecord.getTask();
             if (task.isAjustarInformacoes()) {
-                taskToPage(taskRecord.getData(), task, taskRecord.getDuracao());
+                taskToPage(taskRecord.getData(), task, taskRecord.getDuracao(), true);
                 esperarAjustesUsuario();
                 atualizarAtividadeComInformacoesUsuario(task);
             }
         }
 
+    }
+
+    private void desabilitarBotoes() {
+        desabilitarBotao("btnIncluir");
+        desabilitarBotao("btnLimpar");
+    }
+
+    private void desabilitarBotao(String id) {
+        final String script = new StringBuilder()
+            .append(String.format("var element = selenium.browserbot.findElement(\"id=%s\");", id))
+            .append("element.disabled = true")
+            .toString();
+        getSelenium().getEval(script);
     }
 
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {

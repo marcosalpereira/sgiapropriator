@@ -1,7 +1,14 @@
 package br.com.marcosoft.sgi;
 
 
-import static br.com.marcosoft.sgi.ColunasPlanilha.*;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_DESCRICAO;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_INSUMO;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_LOTACAO_SUPERIOR;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_MACRO;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_NOME_PROJETO;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_TIPO_HORA;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_TIPO_INSUMO;
+import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_UG_CLIENTE;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -59,13 +66,14 @@ public class Apropriator {
         this.apropriationFile = apropriationFileParser.parse();
 
         final Map<String, String> config = this.apropriationFile.getConfig();
+        
         if (!verificarCompatibilidade(config.get("version"))) {
             JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
             return;
         }
 
-        final String firefoxProfile = config.get("firefoxProfile");
-
+        String firefoxProfile = getFirefoxProfile(config);
+        
         SeleniumSupport.initSelenium(firefoxProfile);
 
         try {
@@ -82,6 +90,37 @@ public class Apropriator {
 
     }
 
+    private String getFirefoxProfile(final Map<String, String> config) {
+        String firefoxProfile = config.get("firefoxProfile");
+        firefoxProfile = substringAfterLast(firefoxProfile, File.separatorChar);
+        return substringAfterLast(firefoxProfile, '.');
+    }
+    
+    /**
+     * Retorna a substring da posicao do ultimo separador encontrado ate o final.
+     * Ex: substringAfterLast("/a/b/c", "/") --> "c"
+     * Ex: substringAfterLast("a.b", ".") --> "b"
+     * Ex: substringAfterLast("a", ".") --> "a"   
+     * @param string string
+     * @param separator separator
+     * @return a substring
+     */
+    private String substringAfterLast(String string, char separator) {
+        if (string == null) {
+            return null;
+        }
+        int lastPos = string.lastIndexOf(separator);
+        if (lastPos == -1) {
+            return string;
+        }
+        return string.substring(lastPos + 1);
+    }
+
+    /**
+     * Verificar a compatibilidade desta implementacao com a versao do arquivo de integracao.
+     * @param strVersion versao que esta no arquivo de integracao
+     * @return
+     */
     private boolean verificarCompatibilidade(final String strVersion) {
         final double version = Double.parseDouble(strVersion);
         return (version >= 0.4);

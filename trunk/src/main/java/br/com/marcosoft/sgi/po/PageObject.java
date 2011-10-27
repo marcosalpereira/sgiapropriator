@@ -1,7 +1,6 @@
 package br.com.marcosoft.sgi.po;
 
-import org.seleniuminspector.SeleniumHolder;
-import org.seleniuminspector.ServerLoadingMode;
+import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 
 import com.thoughtworks.selenium.Selenium;
 import com.thoughtworks.selenium.SeleniumException;
@@ -13,14 +12,14 @@ public class PageObject {
     private static final int TIME_OUT = 20;
 
     public Selenium getSelenium() {
-        return SeleniumHolder.getInstance().getSelenium();
+        return SeleniumSupport.getSelenium();
     }
 
     /**
      * Espera a pagina ser carregada.
      */
     protected final void waitForPageToLoad() {
-        ServerLoadingMode.getInstance().waitForLoad();
+        getSelenium().waitForPageToLoad(String.valueOf(TIME_OUT));
     }
 
     /**
@@ -51,9 +50,13 @@ public class PageObject {
      * o valor definido
      * @param locator an element locator
      * @param value value Se for <code>null</code>, retorna sem fazer nenhuma ação
+     * @param checkEditableFirst verifica se está editavel antes de iniciar 
      */
-    protected final void select(String locator, String value) {
+    protected final void select(boolean checkEditableFirst, String locator, String value) {
         if (value == null) {
+            return;
+        }
+        if (checkEditableFirst && !getSelenium().isEditable(locator)) {
             return;
         }
         for (int second = 0; second < TIME_OUT; second++) {
@@ -81,6 +84,16 @@ public class PageObject {
             getSelenium().type(locator, value);
         }
     }
+    
+    /**
+     * Limpar qualquer alerta que foi mostrado.
+     */
+    protected void clearAlerts() {
+        while (getSelenium().isAlertPresent()) {
+            getSelenium().getAlert();
+        }
+    }
+    
 
 
 }
