@@ -11,8 +11,14 @@ public class PageObject {
      */
     private static final int TIME_OUT = 20;
 
+    private boolean ignoreSelectionErrors = false;
+
     public Selenium getSelenium() {
         return SeleniumSupport.getSelenium();
+    }
+
+    protected void setIgnoreSelectionErrors(boolean ignoreSelectionErrors) {
+        this.ignoreSelectionErrors = ignoreSelectionErrors;
     }
 
     /**
@@ -40,7 +46,7 @@ public class PageObject {
     protected final void sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             return;
         }
     }
@@ -50,19 +56,16 @@ public class PageObject {
      * o valor definido
      * @param locator an element locator
      * @param value value Se for <code>null</code>, retorna sem fazer nenhuma ação
-     * @param checkEditableFirst verifica se está editavel antes de iniciar 
+     * @param checkEditableFirst verifica se está editavel antes de iniciar
      */
-    protected final void select(boolean checkEditableFirst, String locator, String value) {
+    protected final void select(String locator, String value) {
         if (value == null) {
-            return;
-        }
-        if (checkEditableFirst && !getSelenium().isEditable(locator)) {
             return;
         }
         for (int second = 0; second < TIME_OUT; second++) {
             try {
                 //se está editavel seleciona.
-                //util nos casos em que o selec está desabilitado e o valor
+                //util nos casos em que o select está desabilitado e o valor
                 //já está setado
                 if (getSelenium().isEditable(locator)) {
                     getSelenium().select(locator, value);
@@ -71,12 +74,15 @@ public class PageObject {
                 if (value.equals(getSelenium().getSelectedLabel(locator))) {
                     return;
                 }
-            } catch (SeleniumException e) {
+            } catch (final SeleniumException e) {
                 System.out.println(e);
             }
             sleep(1000);
         }
-        throw new RuntimeException("Valor '" + value + "' para elemento '" + locator + "' não selecionado");
+        if (!ignoreSelectionErrors) {
+            throw new NotSelectedException(
+                "Valor '" + value + "' para elemento '" + locator + "' não selecionado");
+        }
     }
 
     protected void type(String locator, String value) {
@@ -84,7 +90,7 @@ public class PageObject {
             getSelenium().type(locator, value);
         }
     }
-    
+
     /**
      * Limpar qualquer alerta que foi mostrado.
      */
@@ -93,7 +99,7 @@ public class PageObject {
             getSelenium().getAlert();
         }
     }
-    
+
 
 
 }
