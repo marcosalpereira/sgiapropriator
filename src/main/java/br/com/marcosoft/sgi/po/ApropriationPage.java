@@ -3,6 +3,8 @@ package br.com.marcosoft.sgi.po;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import br.com.marcosoft.sgi.EsperarAjustesUsuario;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
@@ -22,15 +24,124 @@ public class ApropriationPage extends PageObject {
      * @param taskDailySummary task daily summary
      */
     public void apropriate(final TaskDailySummary taskDailySummary) {
-        taskToPage(taskDailySummary.getData(), taskDailySummary.getFirstTask(), taskDailySummary.getSum(), false);
+        final Date data = taskDailySummary.getData();
+        final Task task = taskDailySummary.getFirstTask();
+        final int qtdMinutos = taskDailySummary.getSum();
+
+        fillDate(data);
+        fillLotacaoSuperior(task);
+        fillUgCliente(task);
+        safeFillProject(task);
+        fillHoras(qtdMinutos);
+        fillMacro(task);
+        fillTipoHora(task);
+        fillInsumo(task);
+        fillTipoInsumo(task);
+        fillObservacao(task);
+
         getSelenium().click("btnIncluir");
+
         waitForPageToLoad();
     }
 
-    private void taskToPage(final Date data, final Task task, final int qtdMinutos, boolean checkEditableFirst) {
+    private void safeFillProject(final Task task) {
+        try {
+            fillProjeto(task);
+        } catch (final NotSelectedException e) {
+            final String message = "Não consegui selecionar o projeto ["
+                    + task.getProjeto() +  "]\n\nDeseja selecionar o projeto no SGI?";
+            final int opt = JOptionPane.showConfirmDialog(null, message,
+                "Erro selecionar projeto", JOptionPane.YES_NO_OPTION);
+            if (opt != JOptionPane.OK_OPTION) {
+                throw e;
+            }
+            esperarAjustesUsuario();
+            atualizarAtividadeComInformacoesUsuario(task);
+        }
+    }
 
-        select(checkEditableFirst, "AP_dt_ap", Util.formatDate(data));
+    /**
+     * Ajustar as informacoes da apropriacao task.t
+     * @param tasks tasks
+     */
+    public void ajustarApropriacoes(final List<TaskRecord> tasks) {
+        desabilitarBotoesIncluirCancelar();
 
+        for (final TaskRecord taskRecord : tasks) {
+            final Task task = taskRecord.getTask();
+            if (task.isAjustarInformacoes()) {
+                ajustarApropriacoes(taskRecord.getData(), task, taskRecord.getDuracao());
+                esperarAjustesUsuario();
+                atualizarAtividadeComInformacoesUsuario(task);
+            }
+        }
+    }
+
+    private void ajustarApropriacoes(final Date data, final Task task, final int qtdMinutos) {
+        setIgnoreSelectionErrors(true);
+        try {
+            fillDate(data);
+            fillLotacaoSuperior(task);
+            fillUgCliente(task);
+            safeFillProject(task);
+            fillHoras(qtdMinutos);
+            fillMacro(task);
+            fillTipoHora(task);
+            fillInsumo(task);
+            fillTipoInsumo(task);
+            fillObservacao(task);
+        } finally {
+            setIgnoreSelectionErrors(false);
+        }
+
+    }
+
+    private void fillObservacao(final Task task) {
+        type("AP_obs", task.getDescricao());
+    }
+
+    private void fillTipoInsumo(final Task task) {
+        if (task.getTipoInsumo().length() != 0 && getSelenium().isEditable("AP_Tipo_Insumo")) {
+            select("AP_Tipo_Insumo", task.getTipoInsumo());
+        }
+    }
+
+    private void fillInsumo(final Task task) {
+        if (task.getInsumo().length() != 0) {
+            select("AP_Insumo", task.getInsumo());
+        }
+    }
+
+    private void fillTipoHora(final Task task) {
+        if (task.getTipoHora().length() != 0) {
+            select("AP_Tipo_hora", task.getTipoHora());
+        }
+    }
+
+    private void fillMacro(final Task task) {
+        if (task.getMacro().length() != 0) {
+            select("AP_MacroAtividade", task.getMacro());
+        }
+    }
+
+    private void fillHoras(final int qtdMinutos) {
+        type("AP_horas", Util.formatMinutes(qtdMinutos));
+    }
+
+    private void fillProjeto(final Task task) {
+        if (task.getProjeto().length() != 0) {
+            select("AP_Servico", task.getProjeto());
+        }
+    }
+
+    private void fillUgCliente(final Task task) {
+        if (task.getUgCliente().length() != 0) {
+            select("AP_ug_cliente", task.getUgCliente());
+            //sleep(3000);
+        }
+    }
+
+    private void fillLotacaoSuperior(final Task task) {
         if (task.isLotacaoSuperior()) {
             if (!getSelenium().isChecked("ck_Lot_Superior")) {
                 clickAndWait("ck_Lot_Superior");
@@ -40,57 +151,13 @@ public class ApropriationPage extends PageObject {
                 clickAndWait("ck_Lot_Superior");
             }
         }
-
-        if (task.getUgCliente().length() != 0) {
-            select(checkEditableFirst, "AP_ug_cliente", task.getUgCliente());
-            sleep(3000);
-        }
-
-        if (task.getProjeto().length() != 0) {
-            select(checkEditableFirst, "AP_Servico", task.getProjeto());
-            sleep(3000);
-        }
-
-        type("AP_horas", Util.formatMinutes(qtdMinutos));
-
-        if (task.getMacro().length() != 0) {
-            select(checkEditableFirst, "AP_MacroAtividade", task.getMacro());
-        }
-
-        if (task.getTipoHora().length() != 0) {
-            select(checkEditableFirst, "AP_Tipo_hora", task.getTipoHora());
-        }
-
-        if (task.getInsumo().length() != 0) {
-            select(checkEditableFirst, "AP_Insumo", task.getInsumo());
-        }
-
-        if (task.getTipoInsumo().length() != 0 && getSelenium().isEditable("AP_Tipo_Insumo")) {
-            select(checkEditableFirst, "AP_Tipo_Insumo", task.getTipoInsumo());
-        }
-
-        type("AP_obs", task.getDescricao());
     }
 
-    /**
-     * Ajustar as informacoes da apropriacao task.t
-     * @param tasks tasks
-     */
-    public void ajustarApropriacoes(final List<TaskRecord> tasks) {
-        desabilitarBotoes();
-
-        for (final TaskRecord taskRecord : tasks) {
-            final Task task = taskRecord.getTask();
-            if (task.isAjustarInformacoes()) {
-                taskToPage(taskRecord.getData(), task, taskRecord.getDuracao(), true);
-                esperarAjustesUsuario();
-                atualizarAtividadeComInformacoesUsuario(task);
-            }
-        }
-
+    private void fillDate(final Date data) {
+        select("AP_dt_ap", Util.formatDate(data));
     }
 
-    private void desabilitarBotoes() {
+    private void desabilitarBotoesIncluirCancelar() {
         desabilitarBotao("btnIncluir");
         desabilitarBotao("btnLimpar");
     }

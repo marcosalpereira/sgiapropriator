@@ -33,6 +33,7 @@ import br.com.marcosoft.sgi.po.LoginPage;
 import br.com.marcosoft.sgi.po.Sgi;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.ApplicationProperties;
+import br.com.marcosoft.sgi.util.URLUtils;
 
 /**
  * Apropriar SGI.
@@ -44,7 +45,19 @@ public class Apropriator {
         if (inputFile == null) {
             JOptionPane.showMessageDialog(null, "Erro acessando arquivo importação!");
         } else {
-            new Apropriator().doItForMePlease(inputFile);
+            final Apropriator apropriator = new Apropriator();
+            apropriator.checkForNewVersion();
+            apropriator.doItForMePlease(inputFile);
+        }
+    }
+
+    private void checkForNewVersion() {
+        final String appVersion = getAppVersion();
+        final String latestVersion =
+            URLUtils.downloadFile("http://sgiapropriator.googlecode.com/files/latestVersion.txt");
+        if (latestVersion != null && !latestVersion.equals(appVersion)) {
+            JOptionPane.showMessageDialog(null, "Versão " + latestVersion
+                + " está diponível para download");
         }
     }
 
@@ -66,14 +79,14 @@ public class Apropriator {
         this.apropriationFile = apropriationFileParser.parse();
 
         final Map<String, String> config = this.apropriationFile.getConfig();
-        
+
         if (!verificarCompatibilidade(config.get("version"))) {
             JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
             return;
         }
 
-        String firefoxProfile = getFirefoxProfile(config);
-        
+        final String firefoxProfile = getFirefoxProfile(config);
+
         SeleniumSupport.initSelenium(firefoxProfile);
 
         try {
@@ -95,12 +108,12 @@ public class Apropriator {
         firefoxProfile = substringAfterLast(firefoxProfile, File.separatorChar);
         return substringAfterLast(firefoxProfile, '.');
     }
-    
+
     /**
      * Retorna a substring da posicao do ultimo separador encontrado ate o final.
      * Ex: substringAfterLast("/a/b/c", "/") --> "c"
      * Ex: substringAfterLast("a.b", ".") --> "b"
-     * Ex: substringAfterLast("a", ".") --> "a"   
+     * Ex: substringAfterLast("a", ".") --> "a"
      * @param string string
      * @param separator separator
      * @return a substring
@@ -109,7 +122,7 @@ public class Apropriator {
         if (string == null) {
             return null;
         }
-        int lastPos = string.lastIndexOf(separator);
+        final int lastPos = string.lastIndexOf(separator);
         if (lastPos == -1) {
             return string;
         }
@@ -193,7 +206,7 @@ public class Apropriator {
         final ApropriationPage apropriationPage = irParaPaginaApropriacao();
 
         if (precisaAjustarInformacoesApropriacao(tasks)) {
-            apropriationPage.ajustarApropriacoes(tasks); 
+            apropriationPage.ajustarApropriacoes(tasks);
         }
 
         final List<TaskDailySummary> tasksSum = sumTasks(tasks);
@@ -321,7 +334,7 @@ public class Apropriator {
             if (task.getTipoHora().length() == 0) {
                 task.setTipoHora(defaultTipoHora);
             }
-            
+
             if (!task.isAjustarInformacoes()) {
                 if (task.getInsumo().length() == 0) {
                     task.setInsumo(defaultInsumo);
