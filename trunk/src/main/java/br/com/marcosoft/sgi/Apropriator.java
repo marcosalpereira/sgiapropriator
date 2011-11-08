@@ -135,6 +135,9 @@ public class Apropriator {
      * @return
      */
     private boolean verificarCompatibilidade(final String strVersion) {
+        if (strVersion == null) {
+            return true;
+        }
         final double version = Double.parseDouble(strVersion);
         return (version >= 0.4);
     }
