@@ -56,8 +56,9 @@ public class Apropriator {
         final String latestVersion =
             URLUtils.downloadFile("http://sgiapropriator.googlecode.com/files/latestVersion.txt");
         if (latestVersion != null && !latestVersion.equals(appVersion)) {
-            JOptionPane.showMessageDialog(null, "Versão " + latestVersion
-                + " está diponível para download");
+            final String text = "Versão " + latestVersion + " está diponível em "
+                    + "http://code.google.com/p/sgiapropriator/downloads/list";
+            TopMostMessage.message(text);
         }
     }
 

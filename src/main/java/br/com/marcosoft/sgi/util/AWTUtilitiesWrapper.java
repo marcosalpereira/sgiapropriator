@@ -28,7 +28,7 @@ public class AWTUtilitiesWrapper {
             awtUtilitiesClass = Class.forName("com.sun.awt.AWTUtilities");
             translucencyClass = Class.forName("com.sun.awt.AWTUtilities$Translucency");
             if (translucencyClass.isEnum()) {
-                Object[] kinds = translucencyClass.getEnumConstants();
+                final Object[] kinds = translucencyClass.getEnumConstants();
                 if (kinds != null) {
                     PERPIXEL_TRANSPARENT = kinds[0];
                     TRANSLUCENT = kinds[1];
@@ -40,11 +40,11 @@ public class AWTUtilitiesWrapper {
             mSetWindowShape = awtUtilitiesClass.getMethod("setWindowShape", Window.class, Shape.class);
             mSetWindowOpacity = awtUtilitiesClass.getMethod("setWindowOpacity", Window.class, float.class);
             mSetWindowOpaque = awtUtilitiesClass.getMethod("setWindowOpaque", Window.class, boolean.class);
-        } catch (NoSuchMethodException ex) {
+        } catch (final NoSuchMethodException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SecurityException ex) {
+        } catch (final SecurityException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (final ClassNotFoundException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -53,6 +53,20 @@ public class AWTUtilitiesWrapper {
         init();
     }
 
+    public static void addEfects(Window window) {
+        final boolean isOpacityControlSupported = AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.TRANSLUCENT);
+        if (isOpacityControlSupported) {
+            AWTUtilitiesWrapper.setWindowOpacity(window, 0.85f);
+        }
+//        boolean isShapingSupported = AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.PERPIXEL_TRANSPARENT);
+//        if (isShapingSupported) {
+//            Shape shape = new RoundRectangle2D.Float(0, 0, this.getWidth(), this.getHeight(), 30, 30);
+//            AWTUtilitiesWrapper.setWindowShape(this, shape);
+//        }
+
+    }
+
+
     private static boolean isSupported(Method method, Object kind) {
         if (awtUtilitiesClass == null ||
                 method == null)
@@ -60,15 +74,15 @@ public class AWTUtilitiesWrapper {
             return false;
         }
         try {
-            Object ret = method.invoke(null, kind);
+            final Object ret = method.invoke(null, kind);
             if (ret instanceof Boolean) {
                 return ((Boolean)ret).booleanValue();
             }
-        } catch (IllegalAccessException ex) {
+        } catch (final IllegalAccessException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (final IllegalArgumentException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvocationTargetException ex) {
+        } catch (final InvocationTargetException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
@@ -93,11 +107,11 @@ public class AWTUtilitiesWrapper {
         }
         try {
             method.invoke(null, window, value);
-        } catch (IllegalAccessException ex) {
+        } catch (final IllegalAccessException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalArgumentException ex) {
+        } catch (final IllegalArgumentException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvocationTargetException ex) {
+        } catch (final InvocationTargetException ex) {
             Logger.getLogger(AWTUtilitiesWrapper.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
