@@ -6,8 +6,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.util.Date;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -41,6 +43,10 @@ public class ProgressInfo extends JFrame {
     private JPanel jp;
     private javax.swing.JLabel txtProjeto;
 
+    private JLabel lblData;
+
+    private JLabel txtData;
+
     /** Creates new form NewJPanel */
     public ProgressInfo(String title) {
         initComponents(title);
@@ -48,7 +54,7 @@ public class ProgressInfo extends JFrame {
 
     private void initComponents(String title) {
 
-        GridBagLayout thisLayout1 = new GridBagLayout();
+        final GridBagLayout thisLayout1 = new GridBagLayout();
         thisLayout1.columnWidths = new int[] {7};
         thisLayout1.rowHeights = new int[] {7};
         thisLayout1.columnWeights = new double[] {0.1};
@@ -58,89 +64,20 @@ public class ProgressInfo extends JFrame {
         {
             jp = new JPanel();
 
-            Color blueBorder = new Color(21,38,82);
-            Color blueBackGround = new Color(58,71,106);
-            jp.setBorder(new LineBorder(blueBorder, 3, true));
+            final Color blueBackGround = new Color(58,71,106);
+            jp.setBorder(new LineBorder(new java.awt.Color(230,230,250), 3, true));
             jp.setBackground(blueBackGround);
 
-            GridBagLayout thisLayout = new GridBagLayout();
+            final GridBagLayout thisLayout = new GridBagLayout();
             thisLayout.columnWeights = new double[] {0.0, 0.7};
-            thisLayout.rowWeights = new double[] {0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-            thisLayout.rowHeights = new int[] {7, 7, 7, 7, 7, 7};
+            thisLayout.rowWeights = new double[] {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
+            thisLayout.rowHeights = new int[] {7, 7, 7, 7, 7, 7, 7};
             thisLayout.columnWidths = new int[] {109};
             jp.setLayout(thisLayout);
 
 
             getContentPane().add(jp, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-            {
-                lblProjeto = new javax.swing.JLabel();
-                jp.add(lblProjeto, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
-                lblProjeto.setForeground(new java.awt.Color(254, 254, 254));
-                lblProjeto.setText("Projeto");
-            }
-            {
-                txtProgresso = new javax.swing.JLabel();
-                jp.add(txtProgresso, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-                txtProgresso.setBackground(java.awt.SystemColor.text);
-                txtProgresso.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
-                txtProgresso.setOpaque(true);
-                txtProgresso.setSize(395, 20);
-                txtProgresso.setPreferredSize(new java.awt.Dimension(100, 20));
-            }
-            {
-                txtProjeto = new javax.swing.JLabel();
-                jp.add(txtProjeto, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
-                txtProjeto.setBackground(java.awt.SystemColor.text);
-                txtProjeto.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                txtProjeto.setOpaque(true);
-                txtProjeto.setSize(395, 20);
-                txtProjeto.setPreferredSize(new java.awt.Dimension(0, 20));
-            }
-            {
-                lblMacro = new javax.swing.JLabel();
-                jp.add(lblMacro, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
-                lblMacro.setForeground(new java.awt.Color(254, 254, 254));
-                lblMacro.setText("Macro");
-            }
-            {
-                txtMacro = new javax.swing.JLabel();
-                jp.add(txtMacro, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
-                txtMacro.setBackground(java.awt.SystemColor.text);
-                txtMacro.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                txtMacro.setOpaque(true);
-                txtMacro.setSize(395, 20);
-                txtMacro.setPreferredSize(new java.awt.Dimension(0, 20));
-            }
-            {
-                lblAtividade = new javax.swing.JLabel();
-                jp.add(lblAtividade, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
-                lblAtividade.setForeground(new java.awt.Color(254, 254, 254));
-                lblAtividade.setText("Atividade");
-            }
-            {
-                txtAtividade = new javax.swing.JLabel();
-                jp.add(txtAtividade, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
-                txtAtividade.setBackground(java.awt.SystemColor.text);
-                txtAtividade.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                txtAtividade.setOpaque(true);
-                txtAtividade.setSize(395, 20);
-                txtAtividade.setPreferredSize(new java.awt.Dimension(0, 20));
-            }
-            {
-                lblDuracao = new javax.swing.JLabel();
-                jp.add(lblDuracao, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
-                lblDuracao.setForeground(new java.awt.Color(254, 254, 254));
-                lblDuracao.setText("Duração");
-            }
-            {
-                txtDuracao = new javax.swing.JLabel();
-                jp.add(txtDuracao, new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 10, 10), 0, 0));
-                txtDuracao.setBackground(java.awt.SystemColor.text);
-                txtDuracao.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-                txtDuracao.setOpaque(true);
-                txtDuracao.setSize(395, 20);
-                txtDuracao.setPreferredSize(new java.awt.Dimension(0, 20));
-            }
+
             {
                 lblTitle = new javax.swing.JLabel();
                 jp.add(lblTitle, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(5, 10, 15, 10), 0, 0));
@@ -152,51 +89,126 @@ public class ProgressInfo extends JFrame {
                 lblTitle.setSize(679, 22);
                 lblTitle.setPreferredSize(new java.awt.Dimension(0, 22));
             }
+
             {
                 lblProgresso = new javax.swing.JLabel();
                 lblProgresso.setText("Apropriando");
                 jp.add(lblProgresso, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
                 lblProgresso.setForeground(new java.awt.Color(254, 254, 254));
             }
+            {
+                txtProgresso = new javax.swing.JLabel();
+                jp.add(txtProgresso, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+                txtProgresso.setBackground(java.awt.SystemColor.text);
+                txtProgresso.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+                txtProgresso.setOpaque(true);
+                txtProgresso.setSize(395, 20);
+                txtProgresso.setPreferredSize(new java.awt.Dimension(100, 20));
+            }
+
+            {
+                lblData = new javax.swing.JLabel();
+                lblData.setText("Data");
+                jp.add(lblData, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+                lblData.setForeground(new java.awt.Color(254, 254, 254));
+            }
+            {
+                txtData = new javax.swing.JLabel();
+                jp.add(txtData, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
+                txtData.setBackground(java.awt.SystemColor.text);
+                txtData.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                txtData.setOpaque(true);
+                txtData.setSize(395, 20);
+                txtData.setPreferredSize(new java.awt.Dimension(0, 20));
+            }
+
+            {
+                lblProjeto = new javax.swing.JLabel();
+                jp.add(lblProjeto, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+                lblProjeto.setForeground(new java.awt.Color(254, 254, 254));
+                lblProjeto.setText("Projeto");
+            }
+            {
+                txtProjeto = new javax.swing.JLabel();
+                jp.add(txtProjeto, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
+                txtProjeto.setBackground(java.awt.SystemColor.text);
+                txtProjeto.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                txtProjeto.setOpaque(true);
+                txtProjeto.setSize(395, 20);
+                txtProjeto.setPreferredSize(new java.awt.Dimension(0, 20));
+            }
+
+            {
+                lblMacro = new javax.swing.JLabel();
+                jp.add(lblMacro, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+                lblMacro.setForeground(new java.awt.Color(254, 254, 254));
+                lblMacro.setText("Macro");
+            }
+            {
+                txtMacro = new javax.swing.JLabel();
+                jp.add(txtMacro, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
+                txtMacro.setBackground(java.awt.SystemColor.text);
+                txtMacro.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                txtMacro.setOpaque(true);
+                txtMacro.setSize(395, 20);
+                txtMacro.setPreferredSize(new java.awt.Dimension(0, 20));
+            }
+            {
+                lblAtividade = new javax.swing.JLabel();
+                jp.add(lblAtividade, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+                lblAtividade.setForeground(new java.awt.Color(254, 254, 254));
+                lblAtividade.setText("Atividade");
+            }
+            {
+                txtAtividade = new javax.swing.JLabel();
+                jp.add(txtAtividade, new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 10), 0, 0));
+                txtAtividade.setBackground(java.awt.SystemColor.text);
+                txtAtividade.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                txtAtividade.setOpaque(true);
+                txtAtividade.setSize(395, 20);
+                txtAtividade.setPreferredSize(new java.awt.Dimension(0, 20));
+            }
+            {
+                lblDuracao = new javax.swing.JLabel();
+                jp.add(lblDuracao, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+                lblDuracao.setForeground(new java.awt.Color(254, 254, 254));
+                lblDuracao.setText("Duração");
+            }
+            {
+                txtDuracao = new javax.swing.JLabel();
+                jp.add(txtDuracao, new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 10, 10), 0, 0));
+                txtDuracao.setBackground(java.awt.SystemColor.text);
+                txtDuracao.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+                txtDuracao.setOpaque(true);
+                txtDuracao.setSize(395, 20);
+                txtDuracao.setPreferredSize(new java.awt.Dimension(0, 20));
+            }
             jp.setOpaque(true);
         }
 
         this.setUndecorated(true);
         this.pack();
-        this.setSize(739, 222);
+        this.setSize(739, 242);
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         centerMe();
 
-        addEfects();
+        AWTUtilitiesWrapper.addEfects(this);
         this.setAlwaysOnTop(true);
         this.setVisible(true);
 
     }
 
     private void centerMe() {
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenSize = tk.getScreenSize();
-        int screenWidth = screenSize.width;
+        final Toolkit tk = Toolkit.getDefaultToolkit();
+        final Dimension screenSize = tk.getScreenSize();
+        final int screenWidth = screenSize.width;
 
         this.setLocation(screenWidth / 2 - this.getWidth() / 2, 30);
     }
 
-
-    private void addEfects() {
-        boolean isOpacityControlSupported = AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.TRANSLUCENT);
-        if (isOpacityControlSupported) {
-            AWTUtilitiesWrapper.setWindowOpacity(this, 0.85f);
-        }
-//        boolean isShapingSupported = AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.PERPIXEL_TRANSPARENT);
-//        if (isShapingSupported) {
-//            Shape shape = new RoundRectangle2D.Float(0, 0, this.getWidth(), this.getHeight(), 30, 30);
-//            AWTUtilitiesWrapper.setWindowShape(this, shape);
-//        }
-
-    }
-
     public void setInfo(String progresso, TaskDailySummary tds) {
+        txtData.setText(Util.formatDate(tds.getData()));
         txtProgresso.setText(progresso);
         txtAtividade.setText(tds.getFirstTask().getDescricao());
         txtDuracao.setText(Util.formatMinutes(tds.getSum()));
@@ -205,7 +217,9 @@ public class ProgressInfo extends JFrame {
     }
 
     public static void main(String[] args) {
-        new ProgressInfo("casa").setInfo("1/1", new TaskDailySummary());
+        final TaskDailySummary tds = new TaskDailySummary();
+        tds.setData(new Date());
+        new ProgressInfo("casa").setInfo("1/1", tds);
     }
 
 }
