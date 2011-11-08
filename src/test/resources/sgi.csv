@@ -1,6 +1,4 @@
+cfg|version|0.4
 cfg|cpf|54706424372
-cfg|firefoxProfile|/home/54706424372/.mozilla/firefox/wrjbothz.selenium
-reg|17/05/10|Ter|SUNFJ|Sim|CONCURSOS - ESAF|ImplementaÁ„o|Normal|An·lise de Sistemas|Novo Sistema|at1|08:00|10:10|130
-reg|18/05/10|Ter|SUNFJ|Sim|CONCURSOS - ESAF|ImplementaÁ„o|Normal|An·lise de Sistemas|Novo Sistema|at1|08:00|10:15|135
-reg|18/05/10|Ter|SUNFJ|Sim|CONCURSOS - ESAF|ImplementaÁ„o|Normal|An·lise de Sistemas|Novo Sistema|at2|10:15|11:28|73
-reg|18/05/10|Ter|SUNFJ|Sim|CONCURSOS - ESAF|ImplementaÁ„o|Normal|An·lise de Sistemas|Novo Sistema|at1|14:00|17:44|224
+cfg|firefoxProfile|default
+reg|34|14/10/11|Sex|N√£o|SUPDE|Sim|(S) - SUPDE - Participa√ß√£o em Eventos (DE) ==> 23101121-GEST√ÉO INTERNA DA SUPDE||Normal|An√°lise de Sistemas SP|Desenvolvimento|palestra apropriacao|16.36|18.02|86

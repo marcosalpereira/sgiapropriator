@@ -2,12 +2,15 @@ package br.com.marcosoft.sgi;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import br.com.marcosoft.sgi.model.ApropriationFile;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskRecord;
+import br.com.marcosoft.sgi.util.CharsetDetector;
 import br.com.marcosoft.sgi.util.Util;
 
 public class ApropriationFileParser {
@@ -51,7 +54,8 @@ public class ApropriationFileParser {
     public ApropriationFile parse() throws IOException {
         final ApropriationFile ret = new ApropriationFile();
 
-        final BufferedReader input = new BufferedReader(new FileReader(this.inputFile));
+        final BufferedReader input = getReader(this.inputFile);
+        
         String line = null;
         while ((line = input.readLine()) != null) {
             final String[] fields = line.split("\\|");
@@ -77,6 +81,18 @@ public class ApropriationFileParser {
         }
         input.close();
         return ret;
+    }
+
+    private BufferedReader getReader(File file) throws IOException {
+        InputStream inputStream = new FileInputStream(file);
+        String charset = CharsetDetector.detect(file);
+        final InputStreamReader inputStreamReader;
+        if (charset != null) {
+            inputStreamReader = new InputStreamReader(inputStream, charset);
+        } else {
+            inputStreamReader = new InputStreamReader(inputStream);
+        }
+        return new BufferedReader(inputStreamReader);
     }
 
     private Task parseTask(final String[] fields) {
