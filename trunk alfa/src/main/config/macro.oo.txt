@@ -1,0 +1,394 @@
+'0.1 - inicial
+'0.2 - fix: exec script linux
+'0.3 - processar arquivo retorno
+'0.4 - ajustar informacoes no SGI
+Const VERSION = "0.4"
+
+Const COL_REG = 0
+Const COL_DATE = 1
+Const COL_WEEK_DAY = 2
+Const COL_ADJUST_SGI = 3
+Const COL_MACRO = 7
+Const COL_ACTIVITY = 11
+Const COL_TIME_INI = 12
+Const COL_TIME_END = 13
+Const COL_MINUTES = 14
+Const COL_HOURS = 15
+Const COL_TODO  = 16
+
+Const FIRST_ROW = 1
+Const MAX_ROW = 208
+
+sub main
+
+end sub
+
+'Exportar os dados para o SGI
+sub export
+  Dim oDoc As Object ' The current Document
+  Dim sFilename As String
+  Dim iFileNo as Integer
+  Dim sLine As String
+  Dim iRowsCount as Integer
+  Dim oSheet As Object
+  Dim oSheets As Object ' A collection of all sheets
+
+  oDoc = thisComponent
+  oSheets = oDoc.Sheets()
+
+  sFilename = getDocDir() & "sgi.csv"  
+
+  iFileNo = FreeFile
+  open sFilename for output as iFileNo
+  
+  print #iFileNo, "cfg|version|" & VERSION
+
+  'Export config  
+  oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(1))
+  For row = 0 to MAX_ROW 
+    if (getText(0, row) = "") Then
+       Exit For
+    End if
+    sLine = "cfg|" & getText(0, row) & "|" & getText(1, row)
+    print #iFileNo, sLine
+  Next row  
+  
+  'Export data
+  oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(0))
+  For row = FIRST_ROW to MAX_ROW 
+    if (getText(COL_DATE, row) = "") Then
+       Exit For
+    End if
+    if (getText(COL_REG, row) = "Não") Then
+        sLine = "reg|" & row
+        For col = 1 to COL_MINUTES
+            sLine = sLine & "|" & getText(col, row)
+        Next col
+        print #iFileNo, sLine
+        iRowsCount = iRowsCount + 1
+     End if
+  Next row
+  
+  close #iFileNo
+
+  Rem MsgBox("Exported " & iRowsCount & " line(s) to " + sFilename)
+
+  execImportApp sFilename
+  
+end sub
+
+
+'Duplicar a atividade selecionada
+sub duplicate
+    dim str as String
+    dim curPos 
+    curPos = ThisComponent.CurrentSelection.CellAddress
+
+    dim freeRow 
+    freeRow = getAvailableRow(curPos.row)
+    
+    setCurrentDateAt(COL_DATE, freeRow)
+    for col = COL_DATE + 2 to COL_TIME_INI - 1  
+        setText(col, freeRow, getText(col, curPos.row))
+    Next col    
+    
+    'verificar se finaliza anterior
+    str = getText(COL_TIME_END, freeRow - 1)
+    if str = "" Then
+        setCurrentTimeAt(COL_TIME_END, freeRow - 1)
+    End if
+    
+    setCurrentTimeAt(COL_TIME_INI, freeRow)
+    
+    saveMe()
+    
+end sub
+
+
+'Limpar todos os dados registrados
+sub clean 
+    for row = 1 to MAX_ROW 
+      if (getText(COL_DATE, row) = "") Then
+         exit sub
+      End if    
+      for col = 0 to COL_TIME_END
+         if (col = COL_REG) Then
+            setText(col, row, "Não")
+         Elseif (col = COL_WEEK_DAY) Then
+            'do nothing
+         Else
+            setText(col, row, "")
+         End if
+      Next col
+      setText(COL_TODO, row, "")
+    Next row
+end sub
+
+
+sub getCurrentTime  
+    dim document   as object
+    dim dispatcher as object
+    
+    document   = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    
+    dim args2(0) as new com.sun.star.beans.PropertyValue
+    args2(0).Name = "StringName"
+    if (ThisComponent.CurrentSelection.CellAddress.column = COL_DATE) then  
+        args2(0).Value = getDate()      
+    else
+        args2(0).Value = getTime()
+    end if
+    
+    dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
+    
+    'setar tempo inicial
+    if (ThisComponent.CurrentSelection.CellAddress.column = COL_DATE) then      
+        if getText(COL_TIME_INI, ThisComponent.CurrentSelection.CellAddress.row ) = "" Then
+            setCurrentTimeAt(COL_TIME_INI, ThisComponent.CurrentSelection.CellAddress.row)
+        End if
+        gotoCell COL_ACTIVITY, ThisComponent.CurrentSelection.CellAddress.row + 1
+    End if
+    
+    saveMe()
+    
+end sub
+
+'Salvar a planilha
+sub saveMe() 
+  Dim document As Object
+  Dim dispatcher As Object
+  document = ThisComponent.CurrentController.Frame
+  dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+  dispatcher.executeDispatch(document, ".uno:Save", "", 0, Array())
+End sub
+
+'Ir para a linha/coluna informada
+sub gotoCell(col as integer, row as integer)
+    dim document   as object
+    dim dispatcher as object
+
+    document   = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+
+    dim args(0) as new com.sun.star.beans.PropertyValue
+    args(0).Name = "ToPoint"
+    args(0).Value = "$" & colNumber2Letter(col) & "$" & row
+    dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args())
+end sub
+
+'Setar a hora corrente na linha/coluna.
+sub setCurrentTimeAt(col as integer, row as integer)
+    gotoCell(col,row+1)
+    
+    dim document   as object
+    dim dispatcher as object
+    
+    document   = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+        
+    dim args2(0) as new com.sun.star.beans.PropertyValue
+    args2(0).Name = "StringName"
+    args2(0).Value = getTime()
+    
+    dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
+end sub
+
+'Setar a data corrente na linha/coluna.
+sub setCurrentDateAt(col as integer, row as integer)
+    gotoCell(col,row+1)
+    
+    dim document   as object
+    dim dispatcher as object
+    
+    document   = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+        
+    dim args2(0) as new com.sun.star.beans.PropertyValue
+    args2(0).Name = "StringName"
+    args2(0).Value = getDate()      
+    
+    dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
+end sub
+
+'Converter um numero de coluna na letra da coluna.
+sub colNumber2Letter(col as integer) as string
+    colNumber2Letter = chr(col + 65)
+end sub
+
+'Pegar a data corrente.
+sub getDate() as String
+    getDate = format(date, "dd/mm/yyyy")  'Day(date) & "/" & month(date)  & "/" &  year(date)
+end sub
+
+'Pegar a hora corrente
+sub getTime() as String 
+    getTime = hour(time) & ":" & minute(time)
+end sub
+
+'Pegar o valor da linha/coluna na forma de string
+sub getText(col as integer, row as integer) as String
+    dim oSheet
+    oSheet = ThisComponent.CurrentController.getActiveSheet()
+    getText = oSheet.getCellByPosition(col,row).string 
+end sub
+
+'Pega o valor da linha/coluna
+sub getValue(col as integer, row as integer) as Variant
+    dim oSheet
+    oSheet = ThisComponent.CurrentController.getActiveSheet()
+    getValue = oSheet.getCellByPosition(col,row).value
+end sub
+
+'Setar texto na linha/coluna
+sub setText(col as integer, row as integer, str as String)
+    dim oSheet
+    oSheet = ThisComponent.CurrentController.getActiveSheet()
+    oSheet.getCellByPosition(col,row).string = str
+end sub
+
+'Setar o valor na linha/coluna
+sub setValue(col as integer, row as integer, v as Variant)
+    dim oSheet
+    oSheet = ThisComponent.CurrentController.getActiveSheet()
+    oSheet.getCellByPosition(col,row).value = v
+end sub
+
+'Pegar a proxima linha disponivel (vazia)
+sub getAvailableRow(startRow as integer) as Integer
+    dim i as integer
+    for i = startRow to 32767
+        if getText(1, i) = "" Then
+           getAvailableRow = i
+           exit sub
+        end if
+    next
+    getAvailableRow = -1 
+end sub
+
+'Pegar a pasta onde esta este documento
+Sub getDocDir() As String
+  Dim sURL As String ' Existing URL of file
+  sURL = ConvertFromURL(ThisComponent.getLocation())
+  getDocDir = Mid(sURL,1,Len(sURL)-Len(Dir(sURL)))
+End Sub
+
+'Executar a aplicacao java que interage com o SGI
+Sub execImportApp(exportedFile as String) 
+    Dim inputFileName as String  
+    Dim script as String
+    if (isLinux()) Then 
+       script = "apropriacao.sh"
+    Else 
+       script = "apropriacao.bat"   
+    End If
+    
+    Dim sCurrDir As String
+    sCurrDir = getDocDir()
+    inputFileName = sCurrDir & "sgi.ret"
+    If FileExists(inputFileName) Then 
+        kill inputFileName
+    End if
+
+    script = sCurrDir & script
+    
+    If FileExists(script) Then 
+        Dim sys As Object
+        Dim jarFile  as String
+        jarFile = sCurrDir & "sgi-apropriator-jar-with-dependencies.jar"
+        
+        Dim params as String
+        if isLinux() Then
+            params = jarFile & " " & exportedFile
+        Else
+            params = aspas(jarFile) & " " & aspas(exportedFile)
+        End if 
+    
+        sys = CreateUnoService("com.sun.star.system.SystemShellExecute")
+        sys.execute(script, params, 0)
+        
+        importReturnFile inputFileName
+        
+    End if
+    
+End Sub
+
+'Importar arquivo de retorno.
+Sub importReturnFile(inputFileName as String)
+
+  If Not FileExists(inputFileName) Then 
+     Exit sub
+  End if
+
+  Dim iFileNo as Integer
+  Dim sLine As String
+  Dim aLine
+  
+  iFileNo = FreeFile
+  open inputFileName for input as iFileNo  
+
+  While not eof(iFileNo)
+    Line Input #iFileNo, sLine
+    aLine = split(sLine, "|")
+    if (aLine(0) = "mcr" ) Then 
+        marcarComoRegistrado CInt(aLine(1))
+    ElseIf (aLine(0) = "alv") Then
+        atualizarListaValidacao CInt(aLine(1)), aLine(2)
+    ElseIf (aLine(0) = "set") Then
+        setText CInt(aLine(1)), CInt(aLine(2)), aLine(3)
+    End if
+  WEnd
+  
+  close #iFileNo
+  
+  saveMe()
+  
+End Sub
+
+'Marcar a linha informada como registrada
+Sub marcarComoRegistrado(numeroLinha as integer) 
+    setText(COL_REG, numeroLinha, "Sim")
+End Sub
+
+'Incluir uma nova opcao no combo da coluna informada
+Sub atualizarListaValidacao(coluna as integer, novaOpcao as String)
+    Dim formulaAnterior as string
+    dim pos as integer
+    Dim range as String
+    
+    oDoc = ThisComponent
+    oSheet = oDoc.getSheets.getByIndex(0)
+    range = getRangeParaColuna(coluna)
+    Set CellRange = oSheet.getCellRangeByName(range)
+    Set newValidation = CellRange.Validation
+    formulaAnterior = CellRange.Validation.Formula1
+    pos = instr(formulaAnterior, novaOpcao)
+    if (pos = 0) Then
+      newValidation.Type = com.sun.star.sheet.ValidationType.LIST
+      newValidation.Formula1 = formulaAnterior & ";" & aspas(novaOpcao)
+      newValidation.setOperator com.sun.star.Sheet.ConditionOperator.EQUAL
+      CellRange.Validation = newValidation
+    End if
+
+End sub
+
+'Montar a faixa de celulas usadas na planilha para a coluna informada
+Sub getRangeParaColuna(coluna as integer) as String
+    Dim colStr as String
+    colStr = colNumber2Letter(coluna)
+    getRangeParaColuna =  colStr & FIRST_ROW & ":" & colStr & MAX_ROW
+End Sub
+
+'Envolver a string com aspas
+Sub aspas(str As String) As String  
+  aspas = """" & str & """"
+End Sub
+
+'Verificar se esta no linux
+Sub isLinux() As Boolean
+'iGUIWindows = 1
+'iGUIMacOS = 3
+'iGUIUnix = 4
+
+  isLinux = getGuiType() = 4  
+End Sub
