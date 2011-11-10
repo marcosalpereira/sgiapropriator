@@ -189,11 +189,11 @@ public class ProgressInfo extends JFrame {
         this.setUndecorated(true);
         this.pack();
         this.setSize(739, 242);
-        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         centerMe();
 
-        AWTUtilitiesWrapper.addEfects(this);
+        AWTUtilitiesWrapper.setOpacity(this);
         this.setAlwaysOnTop(true);
         this.setVisible(true);
 

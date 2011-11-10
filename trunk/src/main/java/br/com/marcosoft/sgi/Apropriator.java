@@ -79,16 +79,11 @@ public class Apropriator {
         final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
         this.apropriationFile = apropriationFileParser.parse();
 
-        final Map<String, String> config = this.apropriationFile.getConfig();
-
-        if (!verificarCompatibilidade(config.get("version"))) {
-            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
+        if (!verificarCompatibilidade()) {
             return;
         }
 
-        final String firefoxProfile = getFirefoxProfile(config);
-
-        SeleniumSupport.initSelenium(firefoxProfile);
+        iniciarSelenium();
 
         try {
             final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
@@ -102,6 +97,14 @@ public class Apropriator {
 
         SeleniumSupport.stopSelenium();
 
+    }
+
+    private void iniciarSelenium() {
+        final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
+        final Map<String, String> config = this.apropriationFile.getConfig();
+        final String firefoxProfile = getFirefoxProfile(config);
+        SeleniumSupport.initSelenium(firefoxProfile);
+        waitWindow.dispose();
     }
 
     private String getFirefoxProfile(final Map<String, String> config) {
@@ -135,12 +138,18 @@ public class Apropriator {
      * @param strVersion versao que esta no arquivo de integracao
      * @return
      */
-    private boolean verificarCompatibilidade(final String strVersion) {
+    private boolean verificarCompatibilidade() {
+        final Map<String, String> config = this.apropriationFile.getConfig();
+        final String strVersion = config.get("version");
         if (strVersion == null) {
             return true;
         }
         final double version = Double.parseDouble(strVersion);
-        return (version >= 0.4);
+        if (version < 0.4) {
+            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
+            return false;
+        }
+        return true;
     }
 
     private void gravarArquivoRetorno(final String exportFolder, final List<TaskDailySummary> tasksSum) {
@@ -207,7 +216,9 @@ public class Apropriator {
      * @return
      */
     private List<TaskDailySummary> apropriate(final List<TaskRecord> tasks) {
-        final ApropriationPage apropriationPage = irParaPaginaApropriacao();
+        final HomePage homePage = doLogin();
+        final ApropriationPage apropriationPage = homePage.gotoApropriationPage();
+        apropriationPage.mostrarApropriacoesPeriodo();
 
         if (precisaAjustarInformacoesApropriacao(tasks)) {
             apropriationPage.ajustarApropriacoes(tasks);
@@ -228,14 +239,12 @@ public class Apropriator {
                 tds.setApropriado(true);
 
             } catch (final RuntimeException e) {
-                final String message = "O seguinte erro ocorreu:" + e.getMessage() + "\n\nContinua?";
-                final int opt = JOptionPane.showConfirmDialog(null, message,
-                    "Erro na apropriação", JOptionPane.YES_NO_OPTION);
-                if (opt != JOptionPane.OK_OPTION) {
+                if (stopAfterException(e)) {
                     break;
                 }
             }
         }
+        homePage.logout();
 
         progressInfo.dispose();
 
@@ -243,18 +252,20 @@ public class Apropriator {
 
     }
 
-    private ApropriationPage irParaPaginaApropriacao() {
-        final Sgi sgi = new Sgi();
+    private boolean stopAfterException(final Exception e) {
+        final String message = "O seguinte erro ocorreu:" + e.getMessage() + "\n\nContinua?";
+        final int opt = JOptionPane.showConfirmDialog(null, message,
+            "Erro na apropriação", JOptionPane.YES_NO_OPTION);
+        return opt != JOptionPane.OK_OPTION;
+    }
 
+    private HomePage doLogin() {
+        final Sgi sgi = new Sgi();
         final LoginPage loginPage = sgi.gotoLoginPage();
         final String cpf = this.apropriationFile.getConfig().get("cpf");
         final String pwd = this.applicantionProperties.getProperty("pwd");
-
         final HomePage homePage = loginPage.login(cpf, pwd);
-
-        final ApropriationPage apropriationPage = homePage.gotoApropriationPage();
-        apropriationPage.mostrarApropriacoesPeriodo();
-        return apropriationPage;
+        return homePage;
     }
 
     private boolean precisaAjustarInformacoesApropriacao(final List<TaskRecord> tasks) {

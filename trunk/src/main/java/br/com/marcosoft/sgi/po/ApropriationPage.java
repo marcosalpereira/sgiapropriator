@@ -55,7 +55,7 @@ public class ApropriationPage extends PageObject {
             if (opt != JOptionPane.OK_OPTION) {
                 throw e;
             }
-            esperarAjustesUsuario();
+            esperarAjustesUsuario("nome projeto");
             atualizarAtividadeComInformacoesUsuario(task);
         }
     }
@@ -65,16 +65,27 @@ public class ApropriationPage extends PageObject {
      * @param tasks tasks
      */
     public void ajustarApropriacoes(final List<TaskRecord> tasks) {
-        desabilitarBotoesIncluirCancelar();
-
+        int qtdAjustes = getQuantidadesAjustes(tasks);
+        int progresso = 0;
         for (final TaskRecord taskRecord : tasks) {
             final Task task = taskRecord.getTask();
             if (task.isAjustarInformacoes()) {
                 ajustarApropriacoes(taskRecord.getData(), task, taskRecord.getDuracao());
-                esperarAjustesUsuario();
+                esperarAjustesUsuario(++progresso + "/" + qtdAjustes);
                 atualizarAtividadeComInformacoesUsuario(task);
             }
         }
+    }
+
+    private int getQuantidadesAjustes(final List<TaskRecord> tasks) {
+        int qtd = 0;
+        for (final TaskRecord taskRecord : tasks) {
+            final Task task = taskRecord.getTask();
+            if (task.isAjustarInformacoes()) {
+                qtd++;
+            }
+        }
+        return qtd;
     }
 
     private void ajustarApropriacoes(final Date data, final Task task, final int qtdMinutos) {
@@ -183,8 +194,9 @@ public class ApropriationPage extends PageObject {
         task.setControlarMudancas(false);
     }
 
-    private void esperarAjustesUsuario() throws CanceladoPeloUsuarioException {
-        if (!EsperarAjustesUsuario.esperarAjustes()) {
+    private void esperarAjustesUsuario(String progressoAjuste) throws CanceladoPeloUsuarioException {
+        desabilitarBotoesIncluirCancelar();
+        if (!EsperarAjustesUsuario.esperarAjustes(progressoAjuste)) {
             throw new CanceladoPeloUsuarioException();
         }
     }

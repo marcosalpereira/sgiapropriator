@@ -31,7 +31,11 @@ public class Task {
     private boolean ajustarInformacoes;
 
     public boolean isAjustarInformacoes() {
-        return this.ajustarInformacoes;
+        return this.ajustarInformacoes || isProjetoNaoInformado();
+    }
+
+    private boolean isProjetoNaoInformado() {
+        return projeto == null || projeto.trim().length() == 0;
     }
 
     public void setAjustarInformacoes(final boolean ajustarInformacoes) {

@@ -53,7 +53,7 @@ public class AWTUtilitiesWrapper {
         init();
     }
 
-    public static void addEfects(Window window) {
+    public static void setOpacity(Window window) {
         final boolean isOpacityControlSupported = AWTUtilitiesWrapper.isTranslucencySupported(AWTUtilitiesWrapper.TRANSLUCENT);
         if (isOpacityControlSupported) {
             AWTUtilitiesWrapper.setWindowOpacity(window, 0.85f);

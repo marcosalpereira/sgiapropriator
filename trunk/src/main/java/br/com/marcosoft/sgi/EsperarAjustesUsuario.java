@@ -17,6 +17,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.border.LineBorder;
+
+import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -41,17 +44,18 @@ public class EsperarAjustesUsuario extends JDialog {
 
     private JLabel lblMensagem;
 
+    private final String progressoAjuste;
+
     public static void main(final String[] args) {
-        System.out.println(esperarAjustes());
+        System.out.println(esperarAjustes("1/1"));
     }
 
     /**
      * Dialogo para que se possa ajustar os dados da apropriacao.
      * @return <code>true</code> se ajustou.
      */
-    public static boolean esperarAjustes() {
-        final EsperarAjustesUsuario inst = new EsperarAjustesUsuario();
-
+    public static boolean esperarAjustes(String progressoAjuste) {
+        final EsperarAjustesUsuario inst = new EsperarAjustesUsuario(progressoAjuste);
         ajustou = false;
         inst.setVisible(true);
         inst.dispose();
@@ -59,30 +63,40 @@ public class EsperarAjustesUsuario extends JDialog {
         return ajustou;
     }
 
-    private EsperarAjustesUsuario() {
+    private EsperarAjustesUsuario(String progressoAjuste) {
         super((Frame) null, true);
+        this.progressoAjuste = progressoAjuste;
         initGUI();
     }
 
     private void initGUI() {
-        this.setTitle("Ajustar as informações para a atividade");
         setAlwaysOnTop(true);
         final GridBagLayout thisLayout = new GridBagLayout();
         thisLayout.rowWeights = new double[] {0.1, 0.0};
         thisLayout.rowHeights = new int[] {7, 7};
         thisLayout.columnWeights = new double[] {0.1};
         thisLayout.columnWidths = new int[] {7};
-        getContentPane().setLayout(thisLayout);
-        this.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        getContentPane().setBackground(new Color(21, 38, 82));
+
+        final JPanel jPanel = new JPanel();
+        jPanel.setBorder(new LineBorder(new java.awt.Color(230,230,250), 2, true));
+        getContentPane().add(jPanel);
+        jPanel.setLayout(thisLayout);
+
+        jPanel.setLayout(thisLayout);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        jPanel.setBackground(new Color(21, 38, 82));
         {
             this.lblMensagem = new JLabel();
-            getContentPane().add(
+            jPanel.add(
                 this.lblMensagem,
                 new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
                     GridBagConstraints.BOTH, new Insets(0, 10, 0, 10), 0, 0));
             this.lblMensagem
-                .setText("<html>Ajuste os campos na janela do SGI como se fosse fazer a apropriação. <br />Quando terminar, acione o botão 'Terminei Ajustes' para continuar o processo de apropriação</html>");
+                .setText("<html>"
+                    + "<center>Ajuste " + progressoAjuste + "</center>"
+                    + "Ajuste os campos na janela do SGI como se fosse fazer a apropriação."
+                    + "<br />Quando terminar, acione o botão 'Terminei Ajustes' para continuar o processo de apropriação"
+                	+  "</html>");
             this.lblMensagem.setForeground(new java.awt.Color(255, 255, 255));
             this.lblMensagem.setFont(new java.awt.Font("Arial", 3, 20));
             this.lblMensagem.setHorizontalAlignment(SwingConstants.CENTER);
@@ -95,7 +109,7 @@ public class EsperarAjustesUsuario extends JDialog {
             this.jPanel1 = new JPanel();
             final FlowLayout jPanel1Layout = new FlowLayout();
             this.jPanel1.setLayout(jPanel1Layout);
-            getContentPane().add(
+            jPanel.add(
                 this.jPanel1,
                 new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
                     GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
@@ -121,6 +135,8 @@ public class EsperarAjustesUsuario extends JDialog {
                 });
             }
         }
+        AWTUtilitiesWrapper.setOpacity(this);
+        this.setUndecorated(true);
         this.setSize(707, 174);
         centerMe();
     }
