@@ -19,6 +19,8 @@ import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 
+import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
+
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
  * Builder, which is free for non-commercial use. If Jigloo is being used
@@ -70,7 +72,7 @@ public class TopMostMessage extends JDialog {
         jPanel.setBorder(new LineBorder(new java.awt.Color(230,230,250), 2, true));
         getContentPane().add(jPanel);
         jPanel.setLayout(thisLayout);
-        this.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         jPanel.setBackground(new Color(21, 38, 82));
         this.setUndecorated(true);
         {
@@ -104,7 +106,7 @@ public class TopMostMessage extends JDialog {
         }
         this.setSize(705, 135);
         centerMe();
-        //AWTUtilitiesWrapper.addEfects(this);
+        AWTUtilitiesWrapper.setOpacity(this);
     }
 
     private void centerMe() {

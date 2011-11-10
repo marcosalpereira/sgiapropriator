@@ -1,6 +1,6 @@
 package br.com.marcosoft.sgi.po;
 
-import br.com.marcosoft.sgi.EsperarLoginUsuario;
+import br.com.marcosoft.sgi.WaitWindow;
 
 public class LoginPage extends PageObject {
 
@@ -16,14 +16,14 @@ public class LoginPage extends PageObject {
     }
 
     private void waitForCorrectLogin() {
-        EsperarLoginUsuario esperarLoginUsuario = null;
+        WaitWindow esperarLoginUsuario = null;
         for(;;) {
             if (getSelenium().isElementPresent("menulist")) {
                 clearAlerts();
                 break;
             } else {
                 if (esperarLoginUsuario == null) {
-                    esperarLoginUsuario = new EsperarLoginUsuario();
+                    esperarLoginUsuario = new WaitWindow("Esperando pelo login do usuário");
                 }
             }
         }

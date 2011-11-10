@@ -13,4 +13,12 @@ public class HomePage extends PageObject {
         getSelenium().waitForPageToLoad("30000");
         return new ApropriationPage();
     }
+
+    public LoginPage logout() {
+        getSelenium().selectFrame("relative=top");
+        getSelenium().selectFrame("menu");
+        getSelenium().click("link=Sair");
+        getSelenium().waitForPageToLoad("30000");
+        return new LoginPage();
+    }
 }

@@ -9,7 +9,7 @@ public class PageObject {
     /**
      * Time out em segundos.
      */
-    private static final int TIME_OUT = 20;
+    private static final int TIME_OUT_SEGUNDOS = 20;
 
     private boolean ignoreSelectionErrors = false;
 
@@ -25,7 +25,7 @@ public class PageObject {
      * Espera a pagina ser carregada.
      */
     protected final void waitForPageToLoad() {
-        getSelenium().waitForPageToLoad(String.valueOf(TIME_OUT));
+        getSelenium().waitForPageToLoad(String.valueOf(TIME_OUT_SEGUNDOS * 1000));
     }
 
     /**
@@ -62,7 +62,8 @@ public class PageObject {
         if (value == null) {
             return;
         }
-        for (int second = 0; second < TIME_OUT; second++) {
+        getSelenium().highlight(locator);
+        for (int second = 0; second < TIME_OUT_SEGUNDOS; second++) {
             try {
                 //se está editavel seleciona.
                 //util nos casos em que o select está desabilitado e o valor

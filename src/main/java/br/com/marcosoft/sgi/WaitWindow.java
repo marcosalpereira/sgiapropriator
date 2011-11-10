@@ -10,8 +10,12 @@ import java.awt.Toolkit;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.border.LineBorder;
+
+import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -23,36 +27,47 @@ import javax.swing.WindowConstants;
  * PURCHASED FOR THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED LEGALLY FOR
  * ANY CORPORATE OR COMMERCIAL PURPOSE.
  */
-public class EsperarLoginUsuario extends JDialog {
+public class WaitWindow extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private JLabel lblMensagem;
 
-    public EsperarLoginUsuario() {
+    private final String message;
+
+    public static void main(String[] args) {
+        new WaitWindow("Esperando pelo login do usuário");
+    }
+
+    public WaitWindow(String message) {
         super((Frame) null, false);
+        this.message = message;
         initGUI();
         setVisible(true);
     }
 
     private void initGUI() {
-        this.setTitle("Esperando pelo login");
         setAlwaysOnTop(true);
         final GridBagLayout thisLayout = new GridBagLayout();
         thisLayout.rowWeights = new double[] {0.1, 0.0};
         thisLayout.rowHeights = new int[] {7, 7};
         thisLayout.columnWeights = new double[] {0.1};
         thisLayout.columnWidths = new int[] {7};
-        getContentPane().setLayout(thisLayout);
+
+        final JPanel jPanel = new JPanel();
+        jPanel.setBorder(new LineBorder(new java.awt.Color(230,230,250), 2, true));
+        getContentPane().add(jPanel);
+        jPanel.setLayout(thisLayout);
+
+        jPanel.setLayout(thisLayout);
         this.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        getContentPane().setBackground(new Color(21, 38, 82));
+        jPanel.setBackground(new Color(21, 38, 82));
         {
             this.lblMensagem = new JLabel();
-            getContentPane().add(
+            jPanel.add(
                 this.lblMensagem,
                 new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER,
                     GridBagConstraints.BOTH, new Insets(0, 10, 0, 10), 0, 0));
-            this.lblMensagem
-                .setText("<html>Esperando pelo login do usuário</html>");
+            this.lblMensagem.setText(message);
             this.lblMensagem.setForeground(new java.awt.Color(255, 255, 255));
             this.lblMensagem.setFont(new java.awt.Font("Arial", 3, 20));
             this.lblMensagem.setHorizontalAlignment(SwingConstants.CENTER);
@@ -61,7 +76,9 @@ public class EsperarLoginUsuario extends JDialog {
             this.lblMensagem.setIconTextGap(0);
             this.lblMensagem.setVerticalTextPosition(SwingConstants.TOP);
         }
+        this.setUndecorated(true);
         this.setSize(707, 100);
+        AWTUtilitiesWrapper.setOpacity(this);
         centerMe();
     }
 
