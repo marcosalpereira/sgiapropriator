@@ -14,18 +14,18 @@ import br.com.marcosoft.sgi.util.CharsetDetector;
 import br.com.marcosoft.sgi.util.Util;
 
 public class ApropriationFileParser {
-    //Posicao do tipo de registro 
+    //Posicao do tipo de registro
     private static final int POS_TIPO_REGISTRO = 0;
-    
+
     //Tipos de registro
     private static final String TIPO_REGISTRO_REG = "reg";
     private static final String TIPO_REGISTRO_CFG = "cfg";
-    
+
     //Registros de configuracao
     private static final int CFG_QUANTIDADE_CAMPOS = 3;
     private static final int POS_CFG_VALOR_PROPRIEDADE = 2;
-    private static final int POS_CFG_PROPRIEDADE = 1;    
-    
+    private static final int POS_CFG_PROPRIEDADE = 1;
+
     //Registros de registro de atividade
     private static final int POS_REG_NUMERO_LINHA = 1;
     private static final int POS_REG_DATA = 2;
@@ -43,7 +43,7 @@ public class ApropriationFileParser {
     private static final int POS_REG_HORA_INICIO = 13;
     private static final int POS_REG_HORA_TERMINO = 14;
     private static final int POS_REG_DURACAO = 15;
-    private static final int REG_QUANTIDADE_CAMPOS = 16;    
+    private static final int REG_QUANTIDADE_CAMPOS = 16;
 
     private final File inputFile;
 
@@ -55,14 +55,15 @@ public class ApropriationFileParser {
         final ApropriationFile ret = new ApropriationFile();
 
         final BufferedReader input = getReader(this.inputFile);
-        
+
         String line = null;
         while ((line = input.readLine()) != null) {
             final String[] fields = line.split("\\|");
             if (TIPO_REGISTRO_CFG.equals(fields[POS_TIPO_REGISTRO])) {
                 if (fields.length != CFG_QUANTIDADE_CAMPOS)
                     continue;
-                ret.getConfig().put(fields[POS_CFG_PROPRIEDADE].trim(), fields[POS_CFG_VALOR_PROPRIEDADE].trim());
+                ret.getConfig().setProperty(
+                    fields[POS_CFG_PROPRIEDADE].trim(), fields[POS_CFG_VALOR_PROPRIEDADE].trim());
 
             } else if (TIPO_REGISTRO_REG.equals(fields[POS_TIPO_REGISTRO])) {
                 if (fields.length != REG_QUANTIDADE_CAMPOS)
@@ -84,8 +85,8 @@ public class ApropriationFileParser {
     }
 
     private BufferedReader getReader(File file) throws IOException {
-        InputStream inputStream = new FileInputStream(file);
-        String charset = CharsetDetector.detect(file);
+        final InputStream inputStream = new FileInputStream(file);
+        final String charset = CharsetDetector.detect(file);
         final InputStreamReader inputStreamReader;
         if (charset != null) {
             inputStreamReader = new InputStreamReader(inputStream, charset);

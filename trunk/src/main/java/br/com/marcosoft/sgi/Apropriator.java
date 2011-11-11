@@ -18,7 +18,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.JOptionPane;
@@ -76,14 +75,16 @@ public class Apropriator {
         "sgiApropriator");
 
     public void doItForMePlease(final File inputFile) throws IOException {
+
         final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
-        this.apropriationFile = apropriationFileParser.parse();
+        apropriationFile = apropriationFileParser.parse();
+        final SeleniumSupport seleniumSupport = new SeleniumSupport(apropriationFile.getConfig());
 
         if (!verificarCompatibilidade()) {
             return;
         }
 
-        iniciarSelenium();
+        iniciarSelenium(seleniumSupport);
 
         try {
             final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
@@ -95,42 +96,14 @@ public class Apropriator {
             e.printStackTrace();
         }
 
-        SeleniumSupport.stopSelenium();
+        seleniumSupport.stopSelenium();
 
     }
 
-    private void iniciarSelenium() {
+    private void iniciarSelenium(SeleniumSupport seleniumSupport) {
         final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
-        final Map<String, String> config = this.apropriationFile.getConfig();
-        final String firefoxProfile = getFirefoxProfile(config);
-        SeleniumSupport.initSelenium(firefoxProfile);
+        seleniumSupport.initSelenium();
         waitWindow.dispose();
-    }
-
-    private String getFirefoxProfile(final Map<String, String> config) {
-        String firefoxProfile = config.get("firefoxProfile");
-        firefoxProfile = substringAfterLast(firefoxProfile, File.separatorChar);
-        return substringAfterLast(firefoxProfile, '.');
-    }
-
-    /**
-     * Retorna a substring da posicao do ultimo separador encontrado ate o final.
-     * Ex: substringAfterLast("/a/b/c", "/") --> "c"
-     * Ex: substringAfterLast("a.b", ".") --> "b"
-     * Ex: substringAfterLast("a", ".") --> "a"
-     * @param string string
-     * @param separator separator
-     * @return a substring
-     */
-    private String substringAfterLast(String string, char separator) {
-        if (string == null) {
-            return null;
-        }
-        final int lastPos = string.lastIndexOf(separator);
-        if (lastPos == -1) {
-            return string;
-        }
-        return string.substring(lastPos + 1);
     }
 
     /**
@@ -139,14 +112,13 @@ public class Apropriator {
      * @return
      */
     private boolean verificarCompatibilidade() {
-        final Map<String, String> config = this.apropriationFile.getConfig();
-        final String strVersion = config.get("version");
+        final String strVersion = System.getProperty("version");
         if (strVersion == null) {
             return true;
         }
         final double version = Double.parseDouble(strVersion);
         if (version < 0.4) {
-            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + config.get("version"));
+            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + strVersion);
             return false;
         }
         return true;
@@ -262,7 +234,7 @@ public class Apropriator {
     private HomePage doLogin() {
         final Sgi sgi = new Sgi();
         final LoginPage loginPage = sgi.gotoLoginPage();
-        final String cpf = this.apropriationFile.getConfig().get("cpf");
+        final String cpf = this.apropriationFile.getConfig().getCpf();
         final String pwd = this.applicantionProperties.getProperty("pwd");
         final HomePage homePage = loginPage.login(cpf, pwd);
         return homePage;
