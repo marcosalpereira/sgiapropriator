@@ -2,9 +2,12 @@ package br.com.marcosoft.sgi.selenium;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverBackedSelenium;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.firefox.internal.ProfilesIni;
+
+import br.com.marcosoft.sgi.model.ApropriationFile.Config;
 
 import com.thoughtworks.selenium.Selenium;
 
@@ -12,43 +15,53 @@ import com.thoughtworks.selenium.Selenium;
  * Selenium Support.
  */
 public class SeleniumSupport {
-    private static Selenium selenium;
+    private Selenium selenium;
+    private final Config config;
 
-    public static Selenium getSelenium() {
+    public SeleniumSupport(Config config) {
+        this.config = config;
+    }
+
+    public Selenium getSelenium() {
         return selenium;
     }
 
     /**
      * Inicializa o Selenium.
      */
-    public static void initSelenium(String profile) {
-        final String browserUrl = System.getProperty("sgi.url", "https://sgi.portalcorporativo.serpro/");
+    public void initSelenium() {
+        final WebDriver driver = getDriver();
+        final String browserUrl = config.getUrlSgi();
+        selenium = new WebDriverBackedSelenium(driver, browserUrl);
+    }
 
+    private WebDriver getDriver() {
+        final String browser = config.getBrowserType();
+        if ("chrome".equals(browser)) {
+            return getChromeDriver();
+        }
+        return getFirefoxDriver();
+    }
+
+    private WebDriver getFirefoxDriver() {
         final ProfilesIni allProfiles = new ProfilesIni();
+        final String profile = config.getFirefoxProfile();
         final FirefoxProfile firefoxProfile = allProfiles.getProfile(profile);
         final WebDriver driver = new FirefoxDriver(firefoxProfile);
-
-//        System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
-//        final WebDriver driver = new ChromeDriver();
-
-        selenium = new WebDriverBackedSelenium(driver, browserUrl);
-
+        return driver;
     }
 
-    public static void stopSelenium() {
-        selenium.stop();
-    }
-
-    /**
-     * Pausa a execucao durante o numero de milisegundos especificados.
-     * @param millis numero de milisegundos
-     */
-    public static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (final InterruptedException e) {
-            return;
+    private WebDriver getChromeDriver() {
+        final String key = "webdriver.chrome.driver";
+        if (System.getProperty(key) != null) {
+            System.setProperty(key, "/usr/bin/chromedriver");
         }
+        final WebDriver driver = new ChromeDriver();
+        return driver;
+    }
+
+    public  void stopSelenium() {
+        selenium.stop();
     }
 
 }
