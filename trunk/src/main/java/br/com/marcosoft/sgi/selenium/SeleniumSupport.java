@@ -15,35 +15,33 @@ import com.thoughtworks.selenium.Selenium;
  * Selenium Support.
  */
 public class SeleniumSupport {
-    private Selenium selenium;
-    private final Config config;
+    private static Selenium selenium;
 
-    public SeleniumSupport(Config config) {
-        this.config = config;
+    private SeleniumSupport() {
     }
 
-    public Selenium getSelenium() {
+    public static Selenium getSelenium() {
         return selenium;
     }
 
     /**
      * Inicializa o Selenium.
      */
-    public void initSelenium() {
-        final WebDriver driver = getDriver();
+    public static void initSelenium(Config config) {
+        final WebDriver driver = getDriver(config);
         final String browserUrl = config.getUrlSgi();
         selenium = new WebDriverBackedSelenium(driver, browserUrl);
     }
 
-    private WebDriver getDriver() {
+    private static WebDriver getDriver(Config config) {
         final String browser = config.getBrowserType();
         if ("chrome".equals(browser)) {
             return getChromeDriver();
         }
-        return getFirefoxDriver();
+        return getFirefoxDriver(config);
     }
 
-    private WebDriver getFirefoxDriver() {
+    private static WebDriver getFirefoxDriver(Config config) {
         final ProfilesIni allProfiles = new ProfilesIni();
         final String profile = config.getFirefoxProfile();
         final FirefoxProfile firefoxProfile = allProfiles.getProfile(profile);
@@ -51,7 +49,7 @@ public class SeleniumSupport {
         return driver;
     }
 
-    private WebDriver getChromeDriver() {
+    private static WebDriver getChromeDriver() {
         final String key = "webdriver.chrome.driver";
         if (System.getProperty(key) != null) {
             System.setProperty(key, "/usr/bin/chromedriver");
@@ -60,7 +58,7 @@ public class SeleniumSupport {
         return driver;
     }
 
-    public  void stopSelenium() {
+    public static  void stopSelenium() {
         selenium.stop();
     }
 

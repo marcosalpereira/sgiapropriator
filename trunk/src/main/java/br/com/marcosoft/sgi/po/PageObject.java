@@ -59,7 +59,7 @@ public class PageObject {
      * @param checkEditableFirst verifica se está editavel antes de iniciar
      */
     protected final void select(String locator, String value) {
-        if (value == null) {
+        if (value == null || value.length() == 0) {
             return;
         }
         getSelenium().highlight(locator);

@@ -44,7 +44,7 @@ public class EsperarAjustesUsuario extends JDialog {
 
     private JLabel lblMensagem;
 
-    private final String progressoAjuste;
+    private final String contexto;
 
     public static void main(final String[] args) {
         System.out.println(esperarAjustes("1/1"));
@@ -54,8 +54,8 @@ public class EsperarAjustesUsuario extends JDialog {
      * Dialogo para que se possa ajustar os dados da apropriacao.
      * @return <code>true</code> se ajustou.
      */
-    public static boolean esperarAjustes(String progressoAjuste) {
-        final EsperarAjustesUsuario inst = new EsperarAjustesUsuario(progressoAjuste);
+    public static boolean esperarAjustes(String contexto) {
+        final EsperarAjustesUsuario inst = new EsperarAjustesUsuario(contexto);
         ajustou = false;
         inst.setVisible(true);
         inst.dispose();
@@ -63,9 +63,9 @@ public class EsperarAjustesUsuario extends JDialog {
         return ajustou;
     }
 
-    private EsperarAjustesUsuario(String progressoAjuste) {
+    private EsperarAjustesUsuario(String contexto) {
         super((Frame) null, true);
-        this.progressoAjuste = progressoAjuste;
+        this.contexto = contexto;
         initGUI();
     }
 
@@ -93,7 +93,7 @@ public class EsperarAjustesUsuario extends JDialog {
                     GridBagConstraints.BOTH, new Insets(0, 10, 0, 10), 0, 0));
             this.lblMensagem
                 .setText("<html>"
-                    + "<center>Ajuste " + progressoAjuste + "</center>"
+                    + "<center>Ajuste " + contexto + "</center>"
                     + "Ajuste os campos na janela do SGI como se fosse fazer a apropriação."
                     + "<br />Quando terminar, acione o botão 'Terminei Ajustes' para continuar o processo de apropriação"
                 	+  "</html>");
