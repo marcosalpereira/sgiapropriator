@@ -23,6 +23,7 @@ import java.util.Properties;
 import javax.swing.JOptionPane;
 
 import br.com.marcosoft.sgi.model.ApropriationFile;
+import br.com.marcosoft.sgi.model.ApropriationFile.Config;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.model.TaskRecord;
@@ -78,13 +79,12 @@ public class Apropriator {
 
         final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
         apropriationFile = apropriationFileParser.parse();
-        final SeleniumSupport seleniumSupport = new SeleniumSupport(apropriationFile.getConfig());
 
         if (!verificarCompatibilidade()) {
             return;
         }
 
-        iniciarSelenium(seleniumSupport);
+        iniciarSelenium(apropriationFile.getConfig());
 
         try {
             final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
@@ -96,13 +96,13 @@ public class Apropriator {
             e.printStackTrace();
         }
 
-        seleniumSupport.stopSelenium();
+        SeleniumSupport.stopSelenium();
 
     }
 
-    private void iniciarSelenium(SeleniumSupport seleniumSupport) {
+    private void iniciarSelenium(Config config) {
         final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
-        seleniumSupport.initSelenium();
+        SeleniumSupport.initSelenium(config);
         waitWindow.dispose();
     }
 
@@ -303,17 +303,10 @@ public class Apropriator {
     }
 
     private void verifyDefaults(final List<TaskRecord> tasks) {
-        String defaultTipoHora = this.apropriationFile.getConfig().get("defaultTipoHora");
-        if (defaultTipoHora == null)
-            defaultTipoHora = "Normal";
-
-        String defaultInsumo = this.apropriationFile.getConfig().get("defaultInsumo");
-        if (defaultInsumo == null)
-            defaultInsumo = "Análise de Sistemas";
-
-        String defaultTipoInsumo = this.apropriationFile.getConfig().get("defaultTipoInsumo");
-        if (defaultTipoInsumo == null)
-            defaultTipoInsumo = "Novo Sistema";
+        final Config config = this.apropriationFile.getConfig();
+        final String defaultTipoHora = config.getDefaultTipoHora();
+        final String defaultInsumo = config.getDefaultInsumo();
+        final String defaultTipoInsumo = config.getDefaultTipoInsumo();
 
         for (final TaskRecord tr : tasks) {
             final Task task = tr.getTask();

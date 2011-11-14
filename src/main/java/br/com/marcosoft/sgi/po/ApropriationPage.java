@@ -28,35 +28,50 @@ public class ApropriationPage extends PageObject {
         final Task task = taskDailySummary.getFirstTask();
         final int qtdMinutos = taskDailySummary.getSum();
 
-        fillDate(data);
+        recoverableSelect(task, "Data", "AP_dt_ap", Util.formatDate(data));
+
         fillLotacaoSuperior(task);
-        fillUgCliente(task);
-        safeFillProject(task);
-        fillHoras(qtdMinutos);
-        fillMacro(task);
-        fillTipoHora(task);
-        fillInsumo(task);
-        fillTipoInsumo(task);
-        fillObservacao(task);
+
+        recoverableSelect(task, "UG Cliente", "AP_ug_cliente", task.getUgCliente());
+
+        recoverableSelect(task, "Projeto/Serviço", "AP_Servico", task.getProjeto());
+
+        type("AP_horas", Util.formatMinutes(qtdMinutos));
+
+        recoverableSelect(task, "Macroatividade", "AP_MacroAtividade", task.getMacro());
+
+        recoverableSelect(task, "Tipo de Hora", "AP_Tipo_hora", task.getTipoHora());
+
+        recoverableSelect(task, "Insumo", "AP_Insumo", task.getInsumo());
+
+        if (getSelenium().isEditable("AP_Tipo_Insumo")) {
+            recoverableSelect(task, "Tipo de Insumo", "AP_Tipo_Insumo", task.getTipoInsumo());
+        }
+
+        type("AP_obs", task.getDescricao());
 
         getSelenium().click("btnIncluir");
 
         waitForPageToLoad();
     }
 
-    private void safeFillProject(final Task task) {
+    private void recoverableSelect(Task task, String fieldName, String locator, String value) {
+        if (value.length() == 0) {
+            return;
+        }
         try {
-            fillProjeto(task);
+            select(locator, value);
         } catch (final NotSelectedException e) {
-            final String message = "Não consegui selecionar o projeto ["
-                    + task.getProjeto() +  "]\n\nDeseja selecionar o projeto no SGI?";
+            final String message = String.format(
+                "Não consegui selecionar %s [%s]]\n\nDeseja selecionar o projeto no SGI?",
+                    fieldName, value);
             final int opt = JOptionPane.showConfirmDialog(null, message,
-                "Erro selecionar projeto", JOptionPane.YES_NO_OPTION);
+                "Erro selecionando campo", JOptionPane.YES_NO_OPTION);
             if (opt != JOptionPane.OK_OPTION) {
                 throw e;
             }
-            esperarAjustesUsuario("nome projeto");
-            atualizarAtividadeComInformacoesUsuario(task);
+            esperarAjustesUsuario("Seleção manual" + fieldName);
+            atualizarAtividadeComInformacoesUsuario(task, fieldName);
         }
     }
 
@@ -65,7 +80,7 @@ public class ApropriationPage extends PageObject {
      * @param tasks tasks
      */
     public void ajustarApropriacoes(final List<TaskRecord> tasks) {
-        int qtdAjustes = getQuantidadesAjustes(tasks);
+        final int qtdAjustes = getQuantidadesAjustes(tasks);
         int progresso = 0;
         for (final TaskRecord taskRecord : tasks) {
             final Task task = taskRecord.getTask();
@@ -88,68 +103,26 @@ public class ApropriationPage extends PageObject {
         return qtd;
     }
 
-    private void ajustarApropriacoes(final Date data, final Task task, final int qtdMinutos) {
+    private void ajustarApropriacoes(final Date data, final Task task,
+        final int qtdMinutos) {
         setIgnoreSelectionErrors(true);
         try {
-            fillDate(data);
+            select("AP_dt_ap", Util.formatDate(data));
             fillLotacaoSuperior(task);
-            fillUgCliente(task);
-            safeFillProject(task);
-            fillHoras(qtdMinutos);
-            fillMacro(task);
-            fillTipoHora(task);
-            fillInsumo(task);
-            fillTipoInsumo(task);
-            fillObservacao(task);
+            select("AP_ug_cliente", task.getUgCliente());
+            select("AP_Servico", task.getProjeto());
+            type("AP_horas", Util.formatMinutes(qtdMinutos));
+            select("AP_MacroAtividade", task.getMacro());
+            select("AP_Tipo_hora", task.getTipoHora());
+            select("AP_Insumo", task.getInsumo());
+            if (getSelenium().isEditable("AP_Tipo_Insumo")) {
+                select("AP_Tipo_Insumo", task.getTipoInsumo());
+            }
+            type("AP_obs", task.getDescricao());
         } finally {
             setIgnoreSelectionErrors(false);
         }
 
-    }
-
-    private void fillObservacao(final Task task) {
-        type("AP_obs", task.getDescricao());
-    }
-
-    private void fillTipoInsumo(final Task task) {
-        if (task.getTipoInsumo().length() != 0 && getSelenium().isEditable("AP_Tipo_Insumo")) {
-            select("AP_Tipo_Insumo", task.getTipoInsumo());
-        }
-    }
-
-    private void fillInsumo(final Task task) {
-        if (task.getInsumo().length() != 0) {
-            select("AP_Insumo", task.getInsumo());
-        }
-    }
-
-    private void fillTipoHora(final Task task) {
-        if (task.getTipoHora().length() != 0) {
-            select("AP_Tipo_hora", task.getTipoHora());
-        }
-    }
-
-    private void fillMacro(final Task task) {
-        if (task.getMacro().length() != 0) {
-            select("AP_MacroAtividade", task.getMacro());
-        }
-    }
-
-    private void fillHoras(final int qtdMinutos) {
-        type("AP_horas", Util.formatMinutes(qtdMinutos));
-    }
-
-    private void fillProjeto(final Task task) {
-        if (task.getProjeto().length() != 0) {
-            select("AP_Servico", task.getProjeto());
-        }
-    }
-
-    private void fillUgCliente(final Task task) {
-        if (task.getUgCliente().length() != 0) {
-            select("AP_ug_cliente", task.getUgCliente());
-            //sleep(3000);
-        }
     }
 
     private void fillLotacaoSuperior(final Task task) {
@@ -162,10 +135,6 @@ public class ApropriationPage extends PageObject {
                 clickAndWait("ck_Lot_Superior");
             }
         }
-    }
-
-    private void fillDate(final Date data) {
-        select("AP_dt_ap", Util.formatDate(data));
     }
 
     private void desabilitarBotoesIncluirCancelar() {
@@ -181,6 +150,37 @@ public class ApropriationPage extends PageObject {
         getSelenium().getEval(script);
     }
 
+    private void atualizarAtividadeComInformacoesUsuario(final Task task, String locator) {
+        task.setControlarMudancas(true);
+
+        if (locator.equals("ck_Lot_Superior")) {
+            task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
+        }
+        if (locator.equals("AP_ug_cliente")) {
+            task.setUgCliente(getSelenium().getSelectedLabel("AP_ug_cliente"));
+        }
+        if (locator.equals("AP_Servico")) {
+            task.setProjeto(getSelenium().getSelectedLabel("AP_Servico"));
+        }
+        if (locator.equals("AP_MacroAtividade")) {
+            task.setMacro(getSelenium().getSelectedLabel("AP_MacroAtividade"));
+        }
+        if (locator.equals("AP_Tipo_hora")) {
+            task.setTipoHora(getSelenium().getSelectedLabel("AP_Tipo_hora"));
+        }
+        if (locator.equals("AP_Insumo")) {
+            task.setInsumo(getSelenium().getSelectedLabel("AP_Insumo"));
+        }
+        if (locator.equals("AP_Tipo_Insumo")) {
+            task.setTipoInsumo(getSelenium().getSelectedLabel("AP_Tipo_Insumo"));
+        }
+        if (locator.equals("AP_obs")) {
+            task.setDescricao(getSelenium().getValue("AP_obs"));
+        }
+
+        task.setControlarMudancas(false);
+    }
+
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {
         task.setControlarMudancas(true);
         task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
@@ -194,9 +194,9 @@ public class ApropriationPage extends PageObject {
         task.setControlarMudancas(false);
     }
 
-    private void esperarAjustesUsuario(String progressoAjuste) throws CanceladoPeloUsuarioException {
+    private void esperarAjustesUsuario(String contexto) throws CanceladoPeloUsuarioException {
         desabilitarBotoesIncluirCancelar();
-        if (!EsperarAjustesUsuario.esperarAjustes(progressoAjuste)) {
+        if (!EsperarAjustesUsuario.esperarAjustes(contexto)) {
             throw new CanceladoPeloUsuarioException();
         }
     }
