@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.swing.JOptionPane;
 
@@ -53,13 +55,44 @@ public class Apropriator {
 
     private void checkForNewVersion() {
         final String appVersion = getAppVersion();
-        final String latestVersion =
-            URLUtils.downloadFile("http://sgiapropriator.googlecode.com/files/latestVersion.txt");
+        final String downloadsListPage =
+            URLUtils.downloadFile("http://code.google.com/p/sgiapropriator/downloads/list");
+        final String latestVersion = getLatestVersion(downloadsListPage);
         if (latestVersion != null && !latestVersion.equals(appVersion)) {
             final String text = "Versão " + latestVersion + " está diponível em "
                     + "http://code.google.com/p/sgiapropriator/downloads/list";
             TopMostMessage.message(text);
         }
+    }
+
+    private String getLatestVersion(String downloadsListPage) {
+        if (downloadsListPage == null) {
+            return null;
+        }
+        final SortedSet<String> files = new TreeSet<String>();
+
+        final String TARGET_HREF_PREFIX = "href=\"//sgiapropriator.googlecode.com/files/";
+        final int TARGET_HREF_PREFIX_LENGTH = TARGET_HREF_PREFIX.length();
+        final String versionFilePattern = "^version-\\d+\\.\\d\\.zip$";
+
+        int fromIndex = 0;
+        for(;;) {
+            final int idx = downloadsListPage.indexOf(TARGET_HREF_PREFIX, fromIndex);
+            if (idx == -1) {
+                break;
+            }
+            final int beginIndex = idx + TARGET_HREF_PREFIX_LENGTH;
+            final int endIndex = downloadsListPage.indexOf("\"", beginIndex);
+            final String file = downloadsListPage.substring(beginIndex, endIndex);
+            if (file.matches(versionFilePattern)) {
+                files.add(file);
+            }
+            fromIndex = idx + 1;
+        }
+        if (files.isEmpty()) {
+            return null;
+        }
+        return files.last();
     }
 
     private static File parseArgs(final String[] args) {

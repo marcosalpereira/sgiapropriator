@@ -13,8 +13,23 @@ import br.com.marcosoft.sgi.util.Util;
 
 public class ApropriationPage extends PageObject {
 
+    //IDs dos elementos na pagina.
+    private static final String AP_HORAS = "AP_horas";
+    private static final String AP_DT_AP = "AP_dt_ap";
+    private static final String AP_OBS = "AP_obs";
+    private static final String AP_TIPO_INSUMO = "AP_Tipo_Insumo";
+    private static final String AP_INSUMO = "AP_Insumo";
+    private static final String AP_TIPO_HORA = "AP_Tipo_hora";
+    private static final String AP_MACRO_ATIVIDADE = "AP_MacroAtividade";
+    private static final String AP_SERVICO = "AP_Servico";
+    private static final String AP_UG_CLIENTE = "AP_ug_cliente";
+    private static final String CK_LOT_SUPERIOR = "ck_Lot_Superior";
+
+    private static final String BTN_LIMPAR = "btnLimpar";
+    private static final String BTN_INCLUIR = "btnIncluir";
+
     public ApropriationPage() {
-        if (!getSelenium().isElementPresent("btnIncluir")) {
+        if (!getSelenium().isElementPresent(BTN_INCLUIR)) {
             throw new RuntimeException("Ops! Não estou na página de apropriação!");
         }
     }
@@ -28,29 +43,31 @@ public class ApropriationPage extends PageObject {
         final Task task = taskDailySummary.getFirstTask();
         final int qtdMinutos = taskDailySummary.getSum();
 
-        recoverableSelect(task, "Data", "AP_dt_ap", Util.formatDate(data));
+        recoverableSelect(task, "Data", AP_DT_AP, Util.formatDate(data));
 
         fillLotacaoSuperior(task);
 
-        recoverableSelect(task, "UG Cliente", "AP_ug_cliente", task.getUgCliente());
+        recoverableSelect(task, "UG Cliente", AP_UG_CLIENTE, task.getUgCliente());
 
-        recoverableSelect(task, "Projeto/Serviço", "AP_Servico", task.getProjeto());
+        recoverableSelect(task, "Projeto/Serviço", AP_SERVICO, task.getProjeto());
 
-        type("AP_horas", Util.formatMinutes(qtdMinutos));
+        type(AP_HORAS, Util.formatMinutes(qtdMinutos));
 
-        recoverableSelect(task, "Macroatividade", "AP_MacroAtividade", task.getMacro());
+        recoverableSelect(task, "Macroatividade", AP_MACRO_ATIVIDADE, task.getMacro());
 
-        recoverableSelect(task, "Tipo de Hora", "AP_Tipo_hora", task.getTipoHora());
+        recoverableSelect(task, "Tipo de Hora", AP_TIPO_HORA, task.getTipoHora());
 
-        recoverableSelect(task, "Insumo", "AP_Insumo", task.getInsumo());
+        recoverableSelect(task, "Insumo", AP_INSUMO, task.getInsumo());
 
-        if (getSelenium().isEditable("AP_Tipo_Insumo")) {
-            recoverableSelect(task, "Tipo de Insumo", "AP_Tipo_Insumo", task.getTipoInsumo());
+        if (getSelenium().isEditable(AP_TIPO_INSUMO)) {
+            recoverableSelect(task, "Tipo de Insumo", AP_TIPO_INSUMO, task.getTipoInsumo());
         }
 
-        type("AP_obs", task.getDescricao());
+        if (!getSelenium().getValue(AP_OBS).equals(task.getDescricao())) {
+            type(AP_OBS, task.getDescricao());
+        }
 
-        getSelenium().click("btnIncluir");
+        getSelenium().click(BTN_INCLUIR);
 
         waitForPageToLoad();
     }
@@ -63,7 +80,7 @@ public class ApropriationPage extends PageObject {
             select(locator, value);
         } catch (final NotSelectedException e) {
             final String message = String.format(
-                "Não consegui selecionar %s [%s]]\n\nDeseja selecionar o projeto no SGI?",
+                "Não consegui selecionar %s [%s]]\n\nDeseja selecionar no SGI?",
                     fieldName, value);
             final int opt = JOptionPane.showConfirmDialog(null, message,
                 "Erro selecionando campo", JOptionPane.YES_NO_OPTION);
@@ -71,7 +88,7 @@ public class ApropriationPage extends PageObject {
                 throw e;
             }
             esperarAjustesUsuario("Seleção manual" + fieldName);
-            atualizarAtividadeComInformacoesUsuario(task, fieldName);
+            atualizarAtividadeComInformacoesUsuario(task);
         }
     }
 
@@ -105,105 +122,89 @@ public class ApropriationPage extends PageObject {
 
     private void ajustarApropriacoes(final Date data, final Task task,
         final int qtdMinutos) {
-        setIgnoreSelectionErrors(true);
-        try {
-            select("AP_dt_ap", Util.formatDate(data));
-            fillLotacaoSuperior(task);
-            select("AP_ug_cliente", task.getUgCliente());
-            select("AP_Servico", task.getProjeto());
-            type("AP_horas", Util.formatMinutes(qtdMinutos));
-            select("AP_MacroAtividade", task.getMacro());
-            select("AP_Tipo_hora", task.getTipoHora());
-            select("AP_Insumo", task.getInsumo());
-            if (getSelenium().isEditable("AP_Tipo_Insumo")) {
-                select("AP_Tipo_Insumo", task.getTipoInsumo());
-            }
-            type("AP_obs", task.getDescricao());
-        } finally {
-            setIgnoreSelectionErrors(false);
+        select(AP_DT_AP, Util.formatDate(data), true, 2);
+        fillLotacaoSuperior(task);
+        select(AP_UG_CLIENTE, task.getUgCliente(), true, 2);
+        select(AP_SERVICO, task.getProjeto(), true, 2);
+        type(AP_HORAS, Util.formatMinutes(qtdMinutos));
+        select(AP_MACRO_ATIVIDADE, task.getMacro(), true, 2);
+        select(AP_TIPO_HORA, task.getTipoHora(), true, 2);
+        select(AP_INSUMO, task.getInsumo(), true, 2);
+        if (getSelenium().isEditable(AP_TIPO_INSUMO)) {
+            select(AP_TIPO_INSUMO, task.getTipoInsumo(), true, 2);
         }
-
+        type(AP_OBS, task.getDescricao());
     }
 
     private void fillLotacaoSuperior(final Task task) {
         if (task.isLotacaoSuperior()) {
-            if (!getSelenium().isChecked("ck_Lot_Superior")) {
-                clickAndWait("ck_Lot_Superior");
+            if (!getSelenium().isChecked(CK_LOT_SUPERIOR)) {
+                clickAndWait(CK_LOT_SUPERIOR);
             }
         } else {
-            if (getSelenium().isChecked("ck_Lot_Superior")) {
-                clickAndWait("ck_Lot_Superior");
+            if (getSelenium().isChecked(CK_LOT_SUPERIOR)) {
+                clickAndWait(CK_LOT_SUPERIOR);
             }
         }
-    }
-
-    private void desabilitarBotoesIncluirCancelar() {
-        desabilitarBotao("btnIncluir");
-        desabilitarBotao("btnLimpar");
-    }
-
-    private void desabilitarBotao(String id) {
-        final String script = new StringBuilder()
-            .append(String.format("var element = selenium.browserbot.findElement(\"id=%s\");", id))
-            .append("element.disabled = true")
-            .toString();
-        getSelenium().getEval(script);
-    }
-
-    private void atualizarAtividadeComInformacoesUsuario(final Task task, String locator) {
-        task.setControlarMudancas(true);
-
-        if (locator.equals("ck_Lot_Superior")) {
-            task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
-        }
-        if (locator.equals("AP_ug_cliente")) {
-            task.setUgCliente(getSelenium().getSelectedLabel("AP_ug_cliente"));
-        }
-        if (locator.equals("AP_Servico")) {
-            task.setProjeto(getSelenium().getSelectedLabel("AP_Servico"));
-        }
-        if (locator.equals("AP_MacroAtividade")) {
-            task.setMacro(getSelenium().getSelectedLabel("AP_MacroAtividade"));
-        }
-        if (locator.equals("AP_Tipo_hora")) {
-            task.setTipoHora(getSelenium().getSelectedLabel("AP_Tipo_hora"));
-        }
-        if (locator.equals("AP_Insumo")) {
-            task.setInsumo(getSelenium().getSelectedLabel("AP_Insumo"));
-        }
-        if (locator.equals("AP_Tipo_Insumo")) {
-            task.setTipoInsumo(getSelenium().getSelectedLabel("AP_Tipo_Insumo"));
-        }
-        if (locator.equals("AP_obs")) {
-            task.setDescricao(getSelenium().getValue("AP_obs"));
-        }
-
-        task.setControlarMudancas(false);
     }
 
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {
         task.setControlarMudancas(true);
-        task.setLotacaoSuperior(getSelenium().isChecked("ck_Lot_Superior"));
-        task.setUgCliente(getSelenium().getSelectedLabel("AP_ug_cliente"));
-        task.setProjeto(getSelenium().getSelectedLabel("AP_Servico"));
-        task.setMacro(getSelenium().getSelectedLabel("AP_MacroAtividade"));
-        task.setTipoHora(getSelenium().getSelectedLabel("AP_Tipo_hora"));
-        task.setInsumo(getSelenium().getSelectedLabel("AP_Insumo"));
-        task.setTipoInsumo(getSelenium().getSelectedLabel("AP_Tipo_Insumo"));
-        task.setDescricao(getSelenium().getValue("AP_obs"));
+        task.setLotacaoSuperior(getSelenium().isChecked(CK_LOT_SUPERIOR));
+        task.setUgCliente(getSelenium().getSelectedLabel(AP_UG_CLIENTE));
+        task.setProjeto(getSelenium().getSelectedLabel(AP_SERVICO));
+        task.setMacro(getSelenium().getSelectedLabel(AP_MACRO_ATIVIDADE));
+        task.setTipoHora(getSelenium().getSelectedLabel(AP_TIPO_HORA));
+        task.setInsumo(getSelenium().getSelectedLabel(AP_INSUMO));
+        task.setTipoInsumo(getSelenium().getSelectedLabel(AP_TIPO_INSUMO));
+        task.setDescricao(getSelenium().getValue(AP_OBS));
         task.setControlarMudancas(false);
     }
 
     private void esperarAjustesUsuario(String contexto) throws CanceladoPeloUsuarioException {
-        desabilitarBotoesIncluirCancelar();
+        final DesabilitarBotoesIncluirCancelar desabilitarBotoesIncluirCancelar =
+            new DesabilitarBotoesIncluirCancelar();
+
+        desabilitarBotoesIncluirCancelar.start();
         if (!EsperarAjustesUsuario.esperarAjustes(contexto)) {
+            desabilitarBotoesIncluirCancelar.finalizar();
             throw new CanceladoPeloUsuarioException();
         }
+        desabilitarBotoesIncluirCancelar.finalizar();
     }
 
     public void mostrarApropriacoesPeriodo() {
         getSelenium().click("Ck_Aprop_Periodo");
         waitForPageToLoad();
+    }
+
+
+    private class DesabilitarBotoesIncluirCancelar extends Thread {
+        private boolean stop = false;
+
+        @Override
+        public void run() {
+            while (!stop) {
+                desabilitarBotoesIncluirCancelar();
+                PageObject.sleep(1000);
+            }
+        }
+
+        public void finalizar() {
+            stop = true;
+            habilitarBotoesIncluirCancelar();
+        }
+
+    }
+
+    private void desabilitarBotoesIncluirCancelar() {
+        setEnabled(BTN_INCLUIR, false);
+        setEnabled(BTN_LIMPAR, false);
+    }
+
+    private void habilitarBotoesIncluirCancelar() {
+        setEnabled(BTN_INCLUIR, true);
+        setEnabled(BTN_LIMPAR, true);
     }
 
 }
