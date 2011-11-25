@@ -23,7 +23,7 @@ Const MAX_ROW = 208
 Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
-  MsgBox getJarName("/home/54706424372/Documentos/apropriacao")
+  MsgBox getJarFile(getDocDir())
   rem writeCsvFile /sgi.csv"
 end sub
 
@@ -308,7 +308,7 @@ Sub execImportApp(exportedFile as String)
     If FileExists(script) Then 
         Dim sys As Object
         Dim jarFile  as String
-        jarFile = getJarName(sCurrDir)
+        jarFile = getJarFile(sCurrDir)
         
         Dim params as String
         if isLinux() Then
@@ -327,11 +327,11 @@ Sub execImportApp(exportedFile as String)
     
 End Sub
 
-Sub getJarName(sCurrDir as String) as String
+Sub getJarFile(sCurrDir as String) as String
   Dim latestJar as String
   Dim jar as String
   latestJar = ""
-  jar = Dir(sCurrDir & "/sgi-apropriator*.jar", 0)  
+  jar = Dir(sCurrDir & "sgi-apropriator*.jar", 0)  
   While jar <> ""
     if (jar <> OLD_JAR_NAME) Then 
         if (jar > latestJar) Then
@@ -343,7 +343,7 @@ Sub getJarName(sCurrDir as String) as String
   if (latestJar = "") Then
      latestJar = OLD_JAR_NAME
   End if
-  getJarName = latestJar
+  getJarFile = sCurrDir & latestJar
 End Sub
 
 'Importar arquivo de retorno.
