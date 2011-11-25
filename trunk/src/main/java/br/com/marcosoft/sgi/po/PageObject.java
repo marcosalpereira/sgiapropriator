@@ -11,14 +11,8 @@ public class PageObject {
      */
     private static final int TIME_OUT_SEGUNDOS = 20;
 
-    private boolean ignoreSelectionErrors = false;
-
     public Selenium getSelenium() {
         return SeleniumSupport.getSelenium();
-    }
-
-    protected void setIgnoreSelectionErrors(boolean ignoreSelectionErrors) {
-        this.ignoreSelectionErrors = ignoreSelectionErrors;
     }
 
     /**
@@ -43,7 +37,7 @@ public class PageObject {
      * Pausa a execucao durante o numero de milisegundos especificados.
      * @param millis numero de milisegundos
      */
-    protected final void sleep(long millis) {
+    public static final void sleep(long millis) {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException e) {
@@ -56,14 +50,24 @@ public class PageObject {
      * o valor definido
      * @param locator an element locator
      * @param value value Se for <code>null</code>, retorna sem fazer nenhuma ação
-     * @param checkEditableFirst verifica se está editavel antes de iniciar
      */
     protected final void select(String locator, String value) {
+        select(locator, value, false, TIME_OUT_SEGUNDOS);
+    }
+
+    /**
+     * Veja {@link Selenium#select(String, String)}. Espera até que o elemento esteja com
+     * o valor definido
+     * @param locator an element locator
+     * @param value value Se for <code>null</code>, retorna sem fazer nenhuma ação
+     */
+    protected final void select(String locator, String value,
+        boolean ignoreSelectionError, int timeOut) {
         if (value == null || value.length() == 0) {
             return;
         }
         getSelenium().highlight(locator);
-        for (int second = 0; second < TIME_OUT_SEGUNDOS; second++) {
+        for (int second = 0; second < timeOut; second++) {
             try {
                 //se está editavel seleciona.
                 //util nos casos em que o select está desabilitado e o valor
@@ -80,7 +84,7 @@ public class PageObject {
             }
             sleep(1000);
         }
-        if (!ignoreSelectionErrors) {
+        if (!ignoreSelectionError) {
             throw new NotSelectedException(
                 "Valor '" + value + "' para elemento '" + locator + "' não selecionado");
         }
@@ -101,6 +105,16 @@ public class PageObject {
         }
     }
 
+    protected void setEnabled(String id, boolean enabled) {
+        if (enabled == getSelenium().isEditable(id)) {
+            return;
+        }
+        final String script = new StringBuilder()
+            .append(String.format("var element = selenium.browserbot.findElement(\"id=%s\");", id))
+            .append("element.disabled = " + !enabled)
+            .toString();
+        getSelenium().getEval(script);
+    }
 
 
 }

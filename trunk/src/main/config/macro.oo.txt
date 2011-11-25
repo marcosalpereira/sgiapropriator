@@ -2,7 +2,9 @@
 '0.2 - fix: exec script linux
 '0.3 - processar arquivo retorno
 '0.4 - ajustar informacoes no SGI
-Const VERSION = "0.4"
+'0.5 - usar maior versao do jar
+
+Const VERSION = "0.5"
 
 Const COL_REG = 0
 Const COL_DATE = 1
@@ -18,15 +20,23 @@ Const COL_TODO  = 16
 
 Const FIRST_ROW = 1
 Const MAX_ROW = 208
+Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
-
+  MsgBox getJarName("/home/54706424372/Documentos/apropriacao")
+  rem writeCsvFile /sgi.csv"
 end sub
 
 'Exportar os dados para o SGI
 sub export
-  Dim oDoc As Object ' The current Document
   Dim sFilename As String
+  sFilename = getDocDir() & "sgi.csv"  
+  writeCsvFile sFileName
+  execImportApp sFilename  
+end sub
+
+Sub writeCsvFile(sFilename as String)
+  Dim oDoc As Object ' The current Document
   Dim iFileNo as Integer
   Dim sLine As String
   Dim iRowsCount as Integer
@@ -35,8 +45,6 @@ sub export
 
   oDoc = thisComponent
   oSheets = oDoc.Sheets()
-
-  sFilename = getDocDir() & "sgi.csv"  
 
   iFileNo = FreeFile
   open sFilename for output as iFileNo
@@ -70,12 +78,8 @@ sub export
   Next row
   
   close #iFileNo
-
-  Rem MsgBox("Exported " & iRowsCount & " line(s) to " + sFilename)
-
-  execImportApp sFilename
   
-end sub
+End Sub
 
 
 'Duplicar a atividade selecionada
@@ -107,7 +111,7 @@ end sub
 
 'Limpar todos os dados registrados
 sub clean 
-    for row = 1 to MAX_ROW 
+    for row = FIRST_ROW to MAX_ROW 
       if (getText(COL_DATE, row) = "") Then
          exit sub
       End if    
@@ -273,6 +277,15 @@ Sub getDocDir() As String
   getDocDir = Mid(sURL,1,Len(sURL)-Len(Dir(sURL)))
 End Sub
 
+Sub waitForReturnFile(inputFileName as String)
+   For i=1 to 100 
+      If FileExists(inputFileName) Then 
+        Exit sub
+      End if      
+      Wait 2000
+   Next
+End Sub
+
 'Executar a aplicacao java que interage com o SGI
 Sub execImportApp(exportedFile as String) 
     Dim inputFileName as String  
@@ -295,7 +308,7 @@ Sub execImportApp(exportedFile as String)
     If FileExists(script) Then 
         Dim sys As Object
         Dim jarFile  as String
-        jarFile = sCurrDir & "sgi-apropriator-jar-with-dependencies.jar"
+        jarFile = getJarName(sCurrDir)
         
         Dim params as String
         if isLinux() Then
@@ -306,16 +319,36 @@ Sub execImportApp(exportedFile as String)
     
         sys = CreateUnoService("com.sun.star.system.SystemShellExecute")
         sys.execute(script, params, 0)
-        
+
+        waitForReturnFile inputFileName
         importReturnFile inputFileName
         
     End if
     
 End Sub
 
+Sub getJarName(sCurrDir as String) as String
+  Dim latestJar as String
+  Dim jar as String
+  latestJar = ""
+  jar = Dir(sCurrDir & "/sgi-apropriator*.jar", 0)  
+  While jar <> ""
+    if (jar <> OLD_JAR_NAME) Then 
+        if (jar > latestJar) Then
+           latestJar = jar
+        End if
+    End if    
+    jar = Dir
+  Wend
+  if (latestJar = "") Then
+     latestJar = OLD_JAR_NAME
+  End if
+  getJarName = latestJar
+End Sub
+
 'Importar arquivo de retorno.
 Sub importReturnFile(inputFileName as String)
-
+  
   If Not FileExists(inputFileName) Then 
      Exit sub
   End if
