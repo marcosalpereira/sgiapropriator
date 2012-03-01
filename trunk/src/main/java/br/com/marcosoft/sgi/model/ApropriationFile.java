@@ -113,6 +113,10 @@ public class ApropriationFile {
                 "Novo Sistema");
         }
 
+        public String getNomeSubordinado() {
+            return properties.getProperty(APP_PROPERTIES_PREFIX + "subordinado");
+        }
+
     }
 
 }
