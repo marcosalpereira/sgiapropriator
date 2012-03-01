@@ -24,6 +24,8 @@ import java.util.TreeSet;
 
 import javax.swing.JOptionPane;
 
+import org.apache.commons.lang.StringUtils;
+
 import br.com.marcosoft.sgi.model.ApropriationFile;
 import br.com.marcosoft.sgi.model.ApropriationFile.Config;
 import br.com.marcosoft.sgi.model.Task;
@@ -222,7 +224,7 @@ public class Apropriator {
      */
     private List<TaskDailySummary> apropriate(final List<TaskRecord> tasks) {
         final HomePage homePage = doLogin();
-        final ApropriationPage apropriationPage = homePage.gotoApropriationPage();
+        final ApropriationPage apropriationPage = homePage.gotoApropriationPage(isApropriacaoSobordinado());
         apropriationPage.mostrarApropriacoesPeriodo();
 
         if (precisaAjustarInformacoesApropriacao(tasks)) {
@@ -240,7 +242,7 @@ public class Apropriator {
             try {
                 final String progresso = (++i) + "/" + tasksSum.size();
                 progressInfo.setInfo(progresso, tds);
-                apropriationPage.apropriate(tds);
+                apropriationPage.apropriate(tds, getNomeSubordinado());
                 tds.setApropriado(true);
 
             } catch (final RuntimeException e) {
@@ -255,6 +257,14 @@ public class Apropriator {
 
         return tasksSum;
 
+    }
+
+    private String getNomeSubordinado() {
+        return this.apropriationFile.getConfig().getNomeSubordinado();
+    }
+
+    private boolean isApropriacaoSobordinado() {
+        return StringUtils.isNotEmpty(getNomeSubordinado());
     }
 
     private boolean stopAfterException(final Exception e) {

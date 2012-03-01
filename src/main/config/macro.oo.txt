@@ -3,6 +3,7 @@
 '0.3 - processar arquivo retorno
 '0.4 - ajustar informacoes no SGI
 '0.5 - usar maior versao do jar
+'0.6 - Limpar somente os dados ja registrados
 
 Const VERSION = "0.5"
 
@@ -112,19 +113,18 @@ end sub
 'Limpar todos os dados registrados
 sub clean 
     for row = FIRST_ROW to MAX_ROW 
-      if (getText(COL_DATE, row) = "") Then
-         exit sub
-      End if    
-      for col = 0 to COL_TIME_END
-         if (col = COL_REG) Then
-            setText(col, row, "Não")
-         Elseif (col = COL_WEEK_DAY) Then
-            'do nothing
-         Else
-            setText(col, row, "")
-         End if
-      Next col
-      setText(COL_TODO, row, "")
+      if (getText(COL_REG, row) = "Sim") Then
+	      for col = 0 to COL_TIME_END
+	         if (col = COL_REG) Then
+	            setText(col, row, "Não")
+	         Elseif (col = COL_WEEK_DAY) Then
+	            'do nothing
+	         Else
+	            setText(col, row, "")
+	         End if
+	      Next col
+	      setText(COL_TODO, row, "")
+      End if
     Next row
 end sub
 
