@@ -76,7 +76,7 @@ public class ApropriationPage extends PageObject {
 
         getSelenium().click(BTN_INCLUIR);
 
-        waitForPageToLoad();
+        waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
     }
 
     private void recoverableSelect(Task task, String fieldName, String locator, String value) {
