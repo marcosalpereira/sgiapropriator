@@ -1,5 +1,6 @@
 package br.com.marcosoft.sgi.po;
 
+import br.com.marcosoft.sgi.WaitWindow;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 
 import com.thoughtworks.selenium.Selenium;
@@ -66,7 +67,7 @@ public class PageObject {
         if (value == null || value.length() == 0) {
             return;
         }
-        getSelenium().highlight(locator);
+        highlight(locator);
         for (int second = 0; second < timeOut; second++) {
             try {
                 //se está editavel seleciona.
@@ -87,6 +88,18 @@ public class PageObject {
         if (!ignoreSelectionError) {
             throw new NotSelectedException(
                 "Valor '" + value + "' para elemento '" + locator + "' não selecionado");
+        }
+    }
+
+    /**
+     * highlight.
+     * @param locator locator
+     */
+    private void highlight(String locator) {
+        try {
+            getSelenium().highlight(locator);
+        } catch (final SeleniumException e) {
+            //NOP
         }
     }
 
@@ -114,6 +127,27 @@ public class PageObject {
             .append("element.disabled = " + !enabled)
             .toString();
         getSelenium().getEval(script);
+    }
+
+    /**
+     * @param locator locator que deve esperar ficar presente
+     * @param message mensagem de espera
+     */
+    protected void waitWindow(final String locator, final String message) {
+        WaitWindow waitWindow = null;
+        for(;;) {
+            if (getSelenium().isElementPresent(locator)) {
+                clearAlerts();
+                break;
+            } else {
+                if (waitWindow == null) {
+                    waitWindow = new WaitWindow(message);
+                }
+            }
+        }
+        if (waitWindow != null) {
+            waitWindow.dispose();
+        }
     }
 
 
