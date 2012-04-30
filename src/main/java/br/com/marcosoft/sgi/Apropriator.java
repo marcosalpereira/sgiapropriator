@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
@@ -71,13 +71,12 @@ public class Apropriator {
         if (downloadsListPage == null) {
             return null;
         }
-        final SortedSet<String> files = new TreeSet<String>();
-
         final String TARGET_HREF_PREFIX = "href=\"//sgiapropriator.googlecode.com/files/";
         final int TARGET_HREF_PREFIX_LENGTH = TARGET_HREF_PREFIX.length();
-        final String versionFilePattern = "^version-\\d+\\.\\d\\.zip$";
+        final Pattern versionFilePattern = Pattern.compile("^version-(\\d+\\.\\d+)\\.zip$");
 
         int fromIndex = 0;
+        String latest = "";
         for(;;) {
             final int idx = downloadsListPage.indexOf(TARGET_HREF_PREFIX, fromIndex);
             if (idx == -1) {
@@ -86,15 +85,19 @@ public class Apropriator {
             final int beginIndex = idx + TARGET_HREF_PREFIX_LENGTH;
             final int endIndex = downloadsListPage.indexOf("\"", beginIndex);
             final String file = downloadsListPage.substring(beginIndex, endIndex);
-            if (file.matches(versionFilePattern)) {
-                files.add(file);
+            final Matcher matcher = versionFilePattern.matcher(file);
+            if (matcher.matches()) {
+                final String version = matcher.group(1);
+                if (version.compareTo(latest) > 0) {
+                    latest = version;
+                }
             }
             fromIndex = idx + 1;
         }
-        if (files.isEmpty()) {
+        if (latest.isEmpty()) {
             return null;
         }
-        return files.last();
+        return latest;
     }
 
     private static File parseArgs(final String[] args) {
