@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import br.com.marcosoft.sgi.model.ApropriationFile;
+import br.com.marcosoft.sgi.model.Projeto;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskRecord;
 import br.com.marcosoft.sgi.util.CharsetDetector;
@@ -18,13 +19,21 @@ public class ApropriationFileParser {
     private static final int POS_TIPO_REGISTRO = 0;
 
     //Tipos de registro
-    private static final String TIPO_REGISTRO_REG = "reg";
-    private static final String TIPO_REGISTRO_CFG = "cfg";
+    private static final String TR_ATIVIDADE = "reg";
+    private static final String TR_CONFIG = "cfg";
+    private static final String TR_PROJETO = "prj";
 
     //Registros de configuracao
     private static final int CFG_QUANTIDADE_CAMPOS = 3;
     private static final int POS_CFG_VALOR_PROPRIEDADE = 2;
     private static final int POS_CFG_PROPRIEDADE = 1;
+
+    //Projetos
+    private static final int PRJ_QUANTIDADE_CAMPOS = 4;
+    private static final int POS_PRJ_MNEMONICO = 1;
+    private static final int POS_PRJ_UG        = 2;
+    private static final int POS_PRJ_LOT_SUPERIOR = 3;
+    private static final int POS_PRJ_NOME_PROJETO = 4;
 
     //Registros de registro de atividade
     private static final int POS_REG_NUMERO_LINHA = 1;
@@ -56,32 +65,76 @@ public class ApropriationFileParser {
 
         final BufferedReader input = getReader(this.inputFile);
 
-        String line = null;
-        while ((line = input.readLine()) != null) {
-            final String[] fields = line.split("\\|");
-            if (TIPO_REGISTRO_CFG.equals(fields[POS_TIPO_REGISTRO])) {
-                if (fields.length != CFG_QUANTIDADE_CAMPOS)
-                    continue;
-                ret.getConfig().setProperty(
-                    fields[POS_CFG_PROPRIEDADE].trim(), fields[POS_CFG_VALOR_PROPRIEDADE].trim());
-
-            } else if (TIPO_REGISTRO_REG.equals(fields[POS_TIPO_REGISTRO])) {
-                if (fields.length != REG_QUANTIDADE_CAMPOS)
-                    continue;
-
-                final int duracao = Integer.parseInt(fields[POS_REG_DURACAO]);
-                if (duracao == 0)
-                    continue;
-
-                final TaskRecord taskRecord = new TaskRecord();
-                taskRecord.setData(Util.parseDate("dd/MM/yy", fields[POS_REG_DATA]));
-                taskRecord.setDuracao(duracao);
-                taskRecord.setTask(parseTask(fields));
-                ret.getTasksRecords().add(taskRecord);
+        try {
+            String line = null;
+            while ((line = input.readLine()) != null) {
+                parseLine(ret, line);
             }
         }
-        input.close();
+        finally {
+            input.close();
+        }
+        ret.setInputFile(inputFile);
+
         return ret;
+    }
+
+    private void parseLine(final ApropriationFile ret, String line) throws IOException {
+        final String[] fields = line.split("\\|");
+        if (TR_CONFIG.equals(fields[POS_TIPO_REGISTRO])) {
+            parseConfig(ret, fields);
+
+        } else if (TR_PROJETO.equals(fields[POS_TIPO_REGISTRO])) {
+            parseProject(ret, fields);
+
+        } else if (TR_ATIVIDADE.equals(fields[POS_TIPO_REGISTRO])) {
+            parseAtividade(ret, fields);
+        }
+    }
+
+    private void parseAtividade(final ApropriationFile ret, final String[] fields)
+        throws IOException {
+        if (fields.length != REG_QUANTIDADE_CAMPOS) {
+            throw new IOException(
+                "Erro lendo as atividades. Quantidade de campos difere da esperada!");
+        }
+        final int duracao = Integer.parseInt(fields[POS_REG_DURACAO]);
+        if (duracao != 0) {
+            final TaskRecord taskRecord = new TaskRecord();
+            taskRecord.setData(Util.parseDate("dd/MM/yy", fields[POS_REG_DATA]));
+            taskRecord.setDuracao(duracao);
+            taskRecord.setTask(parseTask(fields));
+            ret.getTasksRecords().add(taskRecord);
+        }
+    }
+
+    private void parseProject(final ApropriationFile ret, final String[] fields)
+        throws IOException {
+        final Projeto projeto = parseProject(fields);
+        ret.getProjects().put(projeto.getMnemonico(), projeto);
+    }
+
+    private void parseConfig(final ApropriationFile ret, final String[] fields)
+        throws IOException {
+        if (fields.length != CFG_QUANTIDADE_CAMPOS) {
+            throw new IOException(
+                "Erro lendo as configurações da planilha. Quantidade de campos difere da esperada!");
+        }
+        ret.getConfig().setProperty(
+            fields[POS_CFG_PROPRIEDADE].trim(), fields[POS_CFG_VALOR_PROPRIEDADE].trim());
+    }
+
+    private Projeto parseProject(String[] fields) throws IOException {
+        final Projeto projeto = new Projeto();
+        if (fields.length != PRJ_QUANTIDADE_CAMPOS) {
+            throw new IOException(
+                "Erro lendo os projetos: Quantidade de campos difere da esperada!");
+        }
+        projeto.setMnemonico(fields[POS_PRJ_MNEMONICO]);
+        projeto.setLotacaoSuperior(!"Não".equals(fields[POS_PRJ_LOT_SUPERIOR]));
+        projeto.setNomeProjeto(fields[POS_PRJ_NOME_PROJETO]);
+        projeto.setUg(fields[POS_PRJ_UG]);
+        return projeto;
     }
 
     private BufferedReader getReader(File file) throws IOException {

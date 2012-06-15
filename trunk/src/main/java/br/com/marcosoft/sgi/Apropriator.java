@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 
 import br.com.marcosoft.sgi.model.ApropriationFile;
 import br.com.marcosoft.sgi.model.ApropriationFile.Config;
+import br.com.marcosoft.sgi.model.Projeto;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.model.TaskRecord;
@@ -129,10 +130,11 @@ public class Apropriator {
         iniciarSelenium(apropriationFile.getConfig());
 
         try {
-            final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
-            verifyDefaults(tasks);
-            final List<TaskDailySummary> tasksSum = apropriate(tasks);
-            gravarArquivoRetorno(inputFile.getParent(), tasksSum);
+            if (isToCaptureProjects()) {
+                captureProjects();
+            } else {
+                apropriate();
+            }
         } catch (final RuntimeException e) {
             JOptionPane.showMessageDialog(null, "Um erro inesperado ocorreu!\n" + e.getMessage());
             e.printStackTrace();
@@ -166,7 +168,9 @@ public class Apropriator {
         return true;
     }
 
-    private void gravarArquivoRetorno(final String exportFolder, final List<TaskDailySummary> tasksSum) {
+    private void gravarArquivoRetornoApropriacao(final List<TaskDailySummary> tasksSum) {
+        final String exportFolder = this.apropriationFile.getInputFile().getParent();
+
         final String fileName = exportFolder + File.separator + "sgi.ret";
         PrintWriter out;
         try {
@@ -225,13 +229,41 @@ public class Apropriator {
 
     }
 
-    /**
-     * @param tasksSum
-     * @return
-     */
-    private List<TaskDailySummary> apropriate(final List<TaskRecord> tasks) {
+    private boolean isToCaptureProjects() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    private void captureProjects() {
         final HomePage homePage = doLogin();
-        final ApropriationPage apropriationPage = homePage.gotoApropriationPage(isApropriacaoSobordinado());
+        final ApropriationPage apropriationPage =
+            homePage.gotoApropriationPage(isApropriacaoSubordinado());
+
+        final String title = "Apropriator v" + getAppVersion();
+
+        final CaptureProjectsWindow captureProjects = new CaptureProjectsWindow(title,
+            this.apropriationFile.getProjects().values(), apropriationPage);
+
+        final List<Projeto> projetos = captureProjects.getSelectedProjects();
+
+        homePage.logout();
+
+        gravarArquivoRetornoProjetos(projetos);
+
+    }
+
+
+    private void gravarArquivoRetornoProjetos(List<Projeto> projetos) {
+        // TODO Auto-generated method stub
+
+    }
+
+    private void apropriate() {
+        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
+        verifyDefaults(tasks);
+
+        final HomePage homePage = doLogin();
+        final ApropriationPage apropriationPage = homePage.gotoApropriationPage(isApropriacaoSubordinado());
         apropriationPage.mostrarApropriacoesPeriodo();
 
         if (precisaAjustarInformacoesApropriacao(tasks)) {
@@ -262,19 +294,18 @@ public class Apropriator {
 
         progressInfo.dispose();
 
-        return tasksSum;
-
+        gravarArquivoRetornoApropriacao(tasksSum);
     }
 
     private String getNomeSubordinado() {
         return this.apropriationFile.getConfig().getNomeSubordinado();
     }
 
-    private boolean isApropriacaoSobordinado() {
+    private boolean isApropriacaoSubordinado() {
         return StringUtils.isNotEmpty(getNomeSubordinado());
     }
 
-    private boolean stopAfterException(final Exception e) {
+    private boolean stopAfterException(final RuntimeException e) {
         final String message = "O seguinte erro ocorreu:" + e.getMessage() + "\n\nContinua?";
         final int opt = JOptionPane.showConfirmDialog(null, message,
             "Erro na apropriação", JOptionPane.YES_NO_OPTION);

@@ -2,13 +2,19 @@ package br.com.marcosoft.sgi.model;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class ApropriationFile {
+    private File inputFile;
+
     private List<TaskRecord> tasksRecords = new ArrayList<TaskRecord>();
 
     private final Config config = new Config();
+
+    private final Map<String, Projeto> projects = new HashMap<String, Projeto>();
 
     public List<TaskRecord> getTasksRecords() {
         return tasksRecords;
@@ -117,6 +123,18 @@ public class ApropriationFile {
             return properties.getProperty(APP_PROPERTIES_PREFIX + "subordinado");
         }
 
+    }
+
+    public Map<String, Projeto> getProjects() {
+        return projects;
+    }
+
+    public File getInputFile() {
+        return inputFile;
+    }
+
+    public void setInputFile(File inputFile) {
+        this.inputFile = inputFile;
     }
 
 }
