@@ -4,8 +4,10 @@
 '0.4 - ajustar informacoes no SGI
 '0.5 - usar maior versao do jar
 '0.6 - Limpar somente os dados ja registrados
+'0.7 - Informar se NÃO encontrar arquivo de retorno
+'0.8 - exibir contador ao esperar por arquivo retorno
 
-Const VERSION = "0.5"
+Const VERSION = "0.8"
 
 Const COL_REG = 0
 Const COL_DATE = 1
@@ -24,8 +26,7 @@ Const MAX_ROW = 208
 Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
-  MsgBox getJarFile(getDocDir())
-  rem writeCsvFile /sgi.csv"
+    waitForReturnFile "/home/54706424372/Documentos/apropriacao/sgi.ret"
 end sub
 
 'Exportar os dados para o SGI
@@ -114,16 +115,16 @@ end sub
 sub clean 
     for row = FIRST_ROW to MAX_ROW 
       if (getText(COL_REG, row) = "Sim") Then
-	      for col = 0 to COL_TIME_END
-	         if (col = COL_REG) Then
-	            setText(col, row, "Não")
-	         Elseif (col = COL_WEEK_DAY) Then
-	            'do nothing
-	         Else
-	            setText(col, row, "")
-	         End if
-	      Next col
-	      setText(COL_TODO, row, "")
+          for col = 0 to COL_TIME_END
+             if (col = COL_REG) Then
+                setText(col, row, "Não")
+             Elseif (col = COL_WEEK_DAY) Then
+                'do nothing
+             Else
+                setText(col, row, "")
+             End if
+          Next col
+          setText(COL_TODO, row, "")
       End if
     Next row
 end sub
@@ -278,12 +279,15 @@ Sub getDocDir() As String
 End Sub
 
 Sub waitForReturnFile(inputFileName as String)
-   For i=1 to 100 
+   For i=1 to 100      
       If FileExists(inputFileName) Then 
+        resetStatusBar
         Exit sub
       End if      
+      showStatusBar "Esperando arquivo retorno (" & (100 - i) & ")"
       Wait 2000
    Next
+   resetStatusBar
 End Sub
 
 'Executar a aplicacao java que interage com o SGI
@@ -348,8 +352,8 @@ End Sub
 
 'Importar arquivo de retorno.
 Sub importReturnFile(inputFileName as String)
-  
-  If Not FileExists(inputFileName) Then 
+
+  if (Not arquivoRetornoPresente(inputFileName)) Then 
      Exit sub
   End if
 
@@ -377,6 +381,24 @@ Sub importReturnFile(inputFileName as String)
   saveMe()
   
 End Sub
+
+sub arquivoRetornoPresente(inputFileName as String) as boolean
+  while true 
+    If (FileExists(inputFileName)) Then
+        arquivoRetornoPresente = true
+        exit sub
+    Else 
+      if (MsgBox("Arquivo de retorno não foi encontrado! Tenta novamente?", MB_YESNO) <> IDYES) Then
+         arquivoRetornoPresente = false
+         exit sub
+     end if
+    end if 
+  wend
+     
+End sub      
+
+
+
 
 'Marcar a linha informada como registrada
 Sub marcarComoRegistrado(numeroLinha as integer) 
@@ -424,4 +446,16 @@ Sub isLinux() As Boolean
 'iGUIUnix = 4
 
   isLinux = getGuiType() = 4  
+End Sub
+
+sub showStatusBar(text as String) 
+    if Not isNull(ThisComponent.CurrentController) Then
+        ThisComponent.CurrentController.StatusIndicator.Start(text, 0)
+    End if
+End sub
+
+sub resetStatusBar() 
+   if Not isNull(ThisComponent.CurrentController) Then
+     ThisComponent.CurrentController.StatusIndicator.Reset
+   End if
 End Sub

@@ -57,14 +57,18 @@ public class Apropriator {
 
     private void checkForNewVersion() {
         final String appVersion = getAppVersion();
+        if (isNewVersion(appVersion)) {
+            final String text = "Uma nova versão está diponível em "
+                + "http://code.google.com/p/sgiapropriator/downloads/list";
+            TopMostMessage.message(text);
+        }
+    }
+
+    private boolean isNewVersion(final String appVersion) {
         final String downloadsListPage =
             URLUtils.downloadFile("http://code.google.com/p/sgiapropriator/downloads/list");
         final String latestVersion = getLatestVersion(downloadsListPage);
-        if (latestVersion != null && !latestVersion.equals(appVersion)) {
-            final String text = "Versão " + latestVersion + " está diponível em "
-                    + "http://code.google.com/p/sgiapropriator/downloads/list";
-            TopMostMessage.message(text);
-        }
+        return latestVersion != null && latestVersion.compareTo(appVersion) > 0;
     }
 
     private String getLatestVersion(String downloadsListPage) {
