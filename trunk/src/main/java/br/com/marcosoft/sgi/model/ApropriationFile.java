@@ -105,7 +105,7 @@ public class ApropriationFile {
 
         public String getDefaultInsumo() {
             return properties.getProperty(APP_PROPERTIES_PREFIX + "defaultInsumo",
-                "Análise de Sistemas");
+                "Desenvolvimento e Manutenção de Software");
         }
 
         public String getDefaultTipoInsumo() {
