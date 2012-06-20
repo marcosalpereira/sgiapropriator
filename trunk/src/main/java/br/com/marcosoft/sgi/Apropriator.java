@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -244,7 +245,7 @@ public class Apropriator {
         final CaptureProjectsWindow captureProjects = new CaptureProjectsWindow(title,
             this.apropriationFile.getProjects().values(), apropriationPage);
 
-        final List<Projeto> projetos = captureProjects.getSelectedProjects();
+        final Collection<Projeto> projetos = captureProjects.getSelectedProjects();
 
         homePage.logout();
 
@@ -253,9 +254,8 @@ public class Apropriator {
     }
 
 
-    private void gravarArquivoRetornoProjetos(List<Projeto> projetos) {
+    private void gravarArquivoRetornoProjetos(Collection<Projeto> projetos) {
         // TODO Auto-generated method stub
-
     }
 
     private void apropriate() {
