@@ -1,6 +1,7 @@
 package br.com.marcosoft.sgi;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -9,22 +10,34 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 
+import br.com.marcosoft.sgi.model.Projeto;
+import br.com.marcosoft.sgi.po.ApropriationPage;
 import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
+import br.com.marcosoft.sgi.util.MoveMouseListener;
+
+import com.thoughtworks.selenium.DefaultSelenium;
+import com.thoughtworks.selenium.Selenium;
 
 
 /**
@@ -39,10 +52,7 @@ import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 * THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED
 * LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
 */
-/**
- *
- */
-public class CaptureProjectsWindow extends JFrame {
+public class CaptureProjectsWindow extends JDialog {
 
     /**
      * Serial.
@@ -51,13 +61,13 @@ public class CaptureProjectsWindow extends JFrame {
 
     private JPanel jp;
     private JPanel filtro;
-    private JTextField txtProgresso;
+    private JTextField txtUgCliente;
     private JButton btnCancelar;
     private JButton btnConfirmar;
     private JPanel jPanel1;
     private JLabel jLabel2;
     private JPanel selecionados;
-    private JButton jButton1;
+    private JButton btnAdicionarProjeto;
     private JLabel jLabel1;
     private JPanel resultados;
     private JList lstSelecionados;
@@ -67,12 +77,49 @@ public class CaptureProjectsWindow extends JFrame {
     private JLabel lblTitle;
     private JLabel lblProgresso;
 
-    /** Creates new form NewJPanel */
-    public CaptureProjectsWindow(String title) {
-        initComponents(title);
+    private Collection<Projeto> projetosSelecionados;
+
+    private final ApropriationPage apropriationPage;
+
+    public static void main(String[] args) {
+        final Projeto projeto = new Projeto();
+        projeto.setMnemonico("mn");
+        projeto.setNomeProjeto("caasa");
+
+        final ApropriationPage apropriationPage = new ApropriationPage() {
+            @Override
+            public Collection<String> capturarProjetos(String ugCliente,
+                boolean lotacaoSuperior) {
+                return Arrays.asList("casa");
+            }
+
+            @Override
+            public Selenium getSelenium() {
+                return new DefaultSelenium(null) {
+                    @Override
+                    public boolean isElementPresent(String locator) {
+                        return true;
+                    }
+                };
+            }
+        };
+
+        final CaptureProjectsWindow c = new CaptureProjectsWindow(
+            "tit", Arrays.asList(projeto), apropriationPage);
+        System.out.println(c.getSelectedProjects());
     }
 
-    private void initComponents(String title) {
+    /** Creates new form NewJPanel
+     * @param title titulo da janela
+     * @param apropriationPage pagina de apropriacao
+     * @param projetos projetos atuais
+     **/
+    public CaptureProjectsWindow(String title, Collection<Projeto> projetos, ApropriationPage apropriationPage) {
+        this.apropriationPage = apropriationPage;
+        initComponents(title, projetos);
+    }
+
+    private void initComponents(String title, Collection<Projeto> projetos) {
 
     	final GridBagLayout thisLayout1 = new GridBagLayout();
     	thisLayout1.rowWeights = new double[] {1.0};
@@ -95,11 +142,7 @@ public class CaptureProjectsWindow extends JFrame {
             thisLayout.columnWidths = new int[] {7};
             jp.setLayout(thisLayout);
 
-
             getContentPane().add(jp, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-
-
-
 
             jp.setOpaque(true);
             {
@@ -128,13 +171,13 @@ public class CaptureProjectsWindow extends JFrame {
             		lblProgresso.setForeground(new java.awt.Color(254,254,254));
             	}
             	{
-            		txtProgresso = new JTextField();
-            		filtro.add(txtProgresso);
-            		txtProgresso.setBackground(java.awt.SystemColor.text);
-            		txtProgresso.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
-            		txtProgresso.setOpaque(true);
-            		txtProgresso.setSize(395, 20);
-            		txtProgresso.setPreferredSize(new java.awt.Dimension(100,20));
+            		txtUgCliente = new JTextField();
+            		filtro.add(txtUgCliente);
+            		txtUgCliente.setBackground(java.awt.SystemColor.text);
+            		txtUgCliente.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+            		txtUgCliente.setOpaque(true);
+            		txtUgCliente.setSize(395, 20);
+            		txtUgCliente.setPreferredSize(new java.awt.Dimension(100,20));
             	}
             	{
             		chkLotacaoSuperior = new JCheckBox();
@@ -147,6 +190,11 @@ public class CaptureProjectsWindow extends JFrame {
             		btnCarregarProjetos = new JButton();
             		filtro.add(btnCarregarProjetos);
             		btnCarregarProjetos.setText("Carregar Projetos");
+            		btnCarregarProjetos.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent evt) {
+                            btnCarregarProjetosActionPerformed(evt);
+                        }
+                    });
             	}
             }
             {
@@ -166,20 +214,18 @@ public class CaptureProjectsWindow extends JFrame {
             		jLabel1.setForeground(new java.awt.Color(254,254,254));
             	}
             	{
-            		final ComboBoxModel cboProjetosModel =
-            				new DefaultComboBoxModel(
-            						new String[] { "Item One", "Item Two" });
+            		final ComboBoxModel cboProjetosModel = new DefaultComboBoxModel();
             		cboProjetos = new JComboBox();
             		resultados.add(cboProjetos, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 5), 0, 0));
             		cboProjetos.setModel(cboProjetosModel);
             	}
             	{
-            		jButton1 = new JButton();
-            		resultados.add(jButton1, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-            		jButton1.setText("Adicionar");
-            		jButton1.addActionListener(new ActionListener() {
+            		btnAdicionarProjeto = new JButton();
+            		resultados.add(btnAdicionarProjeto, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+            		btnAdicionarProjeto.setText("Adicionar");
+            		btnAdicionarProjeto.addActionListener(new ActionListener() {
             			public void actionPerformed(ActionEvent evt) {
-            				jButton1ActionPerformed(evt);
+            				btnAdicionarProjetoActionPerformed(evt);
             			}
             		});
             	}
@@ -202,12 +248,17 @@ public class CaptureProjectsWindow extends JFrame {
             	}
             	{
             		final ListModel lstSelecionadosModel =
-            				new DefaultComboBoxModel(
-            						new String[] { "Item One", "Item Two" });
+            				new DefaultComboBoxModel(projetos.toArray());
             		lstSelecionados = new JList();
             		selecionados.add(lstSelecionados, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
             		lstSelecionados.setModel(lstSelecionadosModel);
             		lstSelecionados.setToolTipText("Duplo click para remover o projeto");
+            		lstSelecionados.addMouseListener(new MouseAdapter() {
+            			@Override
+                        public void mouseClicked(MouseEvent evt) {
+            				lstSelecionadosMouseClicked(evt);
+            			}
+            		});
             	}
             }
             {
@@ -241,15 +292,22 @@ public class CaptureProjectsWindow extends JFrame {
             }
         }
 
+        final MoveMouseListener mml = new MoveMouseListener(jp);
+        jp.addMouseListener(mml);
+        jp.addMouseMotionListener(mml);
+        jp.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+
         this.setUndecorated(true);
         this.pack();
         this.setSize(739, 242);
-        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         centerMe();
 
         AWTUtilitiesWrapper.setOpacity(this);
+        this.setTitle("Importar projetos");
         this.setAlwaysOnTop(true);
+        setModal(true);
         this.setVisible(true);
 
     }
@@ -262,19 +320,49 @@ public class CaptureProjectsWindow extends JFrame {
         this.setLocation(screenWidth / 2 - this.getWidth() / 2, 30);
     }
 
-    private void jButton1ActionPerformed(ActionEvent evt) {
-    	System.out.println("jButton1.actionPerformed, event="+evt);
-    	//TODO add your code for jButton1.actionPerformed
+    private void btnAdicionarProjetoActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+        final String mnemonico = JOptionPane.showInputDialog("Informe Mnemonico para o projeto");
+        final Projeto projeto = new Projeto();
+        projeto.setMnemonico(mnemonico);
+        projeto.setLotacaoSuperior(chkLotacaoSuperior.isSelected());
+        projeto.setNomeProjeto((String) cboProjetos.getSelectedItem());
+        projeto.setUg(txtUgCliente.getText());
+        final DefaultComboBoxModel model = (DefaultComboBoxModel) lstSelecionados.getModel();
+        model.addElement(projeto);
     }
 
-    private void btnConfirmarActionPerformed(ActionEvent evt) {
-    	System.out.println("btnConfirmar.actionPerformed, event="+evt);
-    	//TODO add your code for btnConfirmar.actionPerformed
+    private void btnConfirmarActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+        final DefaultComboBoxModel model  = (DefaultComboBoxModel) lstSelecionados.getModel();
+        this.projetosSelecionados = new ArrayList<Projeto>();
+        for (int i=0; i<model.getSize(); i++) {
+            this.projetosSelecionados.add((Projeto) model.getElementAt(i));
+        }
+    	this.dispose();
+
     }
 
-    private void btnCancelarActionPerformed(ActionEvent evt) {
-    	System.out.println("btnCancelar.actionPerformed, event="+evt);
-    	//TODO add your code for btnCancelar.actionPerformed
+    private void btnCancelarActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+    	this.dispose();
+    	this.projetosSelecionados = null;
+    }
+
+    private void btnCarregarProjetosActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+        final Collection<String> nomesProjetos =
+            apropriationPage.capturarProjetos(
+                txtUgCliente.getText(), chkLotacaoSuperior.isSelected());
+        cboProjetos.setModel(new DefaultComboBoxModel(nomesProjetos.toArray()));
+    }
+
+    public Collection<Projeto> getSelectedProjects() {
+        return projetosSelecionados;
+    }
+
+    private void lstSelecionadosMouseClicked(MouseEvent evt) {
+        final int selectedIndex = lstSelecionados.getSelectedIndex();
+        if (evt.getClickCount() == 2 && selectedIndex != -1) {
+            final DefaultComboBoxModel model = (DefaultComboBoxModel) lstSelecionados.getModel();
+            model.removeElementAt(selectedIndex);
+        }
     }
 
 }

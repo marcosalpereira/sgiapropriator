@@ -1,6 +1,7 @@
 package br.com.marcosoft.sgi;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -18,6 +19,7 @@ import javax.swing.border.SoftBevelBorder;
 
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
+import br.com.marcosoft.sgi.util.MoveMouseListener;
 import br.com.marcosoft.sgi.util.Util;
 
 /**
@@ -185,6 +187,11 @@ public class ProgressInfo extends JFrame {
             }
             jp.setOpaque(true);
         }
+
+        final MoveMouseListener mml = new MoveMouseListener(jp);
+        jp.addMouseListener(mml);
+        jp.addMouseMotionListener(mml);
+        jp.setCursor(new Cursor(Cursor.MOVE_CURSOR));
 
         this.setUndecorated(true);
         this.pack();

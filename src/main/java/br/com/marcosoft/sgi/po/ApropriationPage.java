@@ -1,5 +1,8 @@
 package br.com.marcosoft.sgi.po;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -19,8 +22,10 @@ public class ApropriationPage extends PageObject {
     private static final String AP_HORAS = "AP_horas";
     private static final String AP_DT_AP = "AP_dt_ap";
     private static final String AP_OBS = "AP_obs";
+    @SuppressWarnings("unused")
     private static final String AP_TIPO_INSUMO = "AP_Tipo_Insumo";
     private static final String AP_INSUMO = "AP_Insumo";
+    @SuppressWarnings("unused")
     private static final String AP_TIPO_HORA = "AP_Tipo_hora";
     private static final String AP_MACRO_ATIVIDADE = "AP_MacroAtividade";
     private static final String AP_SERVICO = "AP_Servico";
@@ -34,6 +39,19 @@ public class ApropriationPage extends PageObject {
         if (!getSelenium().isElementPresent(BTN_INCLUIR)) {
             throw new RuntimeException("Ops! Não estou na página de apropriação!");
         }
+    }
+
+    public Collection<String> capturarProjetos(String ugCliente, boolean lotacaoSuperior) {
+        try {
+            select(AP_UG_CLIENTE, ugCliente);
+        } catch (final NotSelectedException e) {
+            JOptionPane.showMessageDialog(null, "UG Cliente inválida");
+            return Collections.emptyList();
+        }
+        fillLotacaoSuperior(lotacaoSuperior);
+        sleep(1000);
+        final String[] options = getSelenium().getSelectOptions(AP_SERVICO);
+        return Arrays.asList(options);
     }
 
     /**
@@ -52,7 +70,7 @@ public class ApropriationPage extends PageObject {
 
         recoverableSelect(task, "Data", AP_DT_AP, Util.formatDate(data));
 
-        fillLotacaoSuperior(task);
+        fillLotacaoSuperior(task.isLotacaoSuperior());
 
         recoverableSelect(task, "UG Cliente", AP_UG_CLIENTE, task.getUgCliente());
 
@@ -130,7 +148,7 @@ public class ApropriationPage extends PageObject {
     private void ajustarApropriacoes(final Date data, final Task task,
         final int qtdMinutos) {
         select(AP_DT_AP, Util.formatDate(data), true, 2);
-        fillLotacaoSuperior(task);
+        fillLotacaoSuperior(task.isLotacaoSuperior());
         select(AP_UG_CLIENTE, task.getUgCliente(), true, 2);
         select(AP_SERVICO, task.getProjeto(), true, 2);
         type(AP_HORAS, Util.formatMinutes(qtdMinutos));
@@ -143,8 +161,8 @@ public class ApropriationPage extends PageObject {
         type(AP_OBS, task.getDescricao());
     }
 
-    private void fillLotacaoSuperior(final Task task) {
-        if (task.isLotacaoSuperior()) {
+    private void fillLotacaoSuperior(boolean lotacaoSuperior) {
+        if (lotacaoSuperior) {
             if (!getSelenium().isChecked(CK_LOT_SUPERIOR)) {
                 clickAndWait(CK_LOT_SUPERIOR);
             }

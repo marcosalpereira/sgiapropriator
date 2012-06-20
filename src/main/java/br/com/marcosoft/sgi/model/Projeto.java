@@ -29,4 +29,9 @@ public class Projeto {
     public void setNomeProjeto(String nomeProjeto) {
         this.nomeProjeto = nomeProjeto;
     }
+
+    @Override
+    public String toString() {
+        return this.mnemonico + "-" + this.nomeProjeto;
+    }
 }
