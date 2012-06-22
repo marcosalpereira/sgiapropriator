@@ -22,6 +22,7 @@ public class ApropriationFileParser {
     private static final String TR_ATIVIDADE = "reg";
     private static final String TR_CONFIG = "cfg";
     private static final String TR_PROJETO = "prj";
+    private static final String TR_CAPTURE = "cap";
 
     //Registros de configuracao
     private static final int CFG_QUANTIDADE_CAMPOS = 3;
@@ -29,7 +30,7 @@ public class ApropriationFileParser {
     private static final int POS_CFG_PROPRIEDADE = 1;
 
     //Projetos
-    private static final int PRJ_QUANTIDADE_CAMPOS = 4;
+    private static final int PRJ_QUANTIDADE_CAMPOS = 5;
     private static final int POS_PRJ_MNEMONICO = 1;
     private static final int POS_PRJ_UG        = 2;
     private static final int POS_PRJ_LOT_SUPERIOR = 3;
@@ -89,6 +90,8 @@ public class ApropriationFileParser {
 
         } else if (TR_ATIVIDADE.equals(fields[POS_TIPO_REGISTRO])) {
             parseAtividade(ret, fields);
+        } else if (TR_CAPTURE.equals(fields[POS_TIPO_REGISTRO])) {
+            ret.setCaptureProjects(true);
         }
     }
 

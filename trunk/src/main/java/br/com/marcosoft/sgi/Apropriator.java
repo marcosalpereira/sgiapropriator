@@ -131,7 +131,7 @@ public class Apropriator {
         iniciarSelenium(apropriationFile.getConfig());
 
         try {
-            if (isToCaptureProjects()) {
+            if (apropriationFile.isCaptureProjects()) {
                 captureProjects();
             } else {
                 apropriate();
@@ -168,6 +168,40 @@ public class Apropriator {
         }
         return true;
     }
+
+    private void gravarArquivoRetornoProjetos(Collection<Projeto> projetos) {
+        final String exportFolder = this.apropriationFile.getInputFile().getParent();
+
+        final String fileName = exportFolder + File.separator + "sgi.ret";
+        PrintWriter out;
+        try {
+            out = new PrintWriter(new FileWriter(fileName));
+        } catch (final IOException e) {
+            JOptionPane.showMessageDialog(null, "Nao consegui gravar arquivo retorno!\n"
+                + e.getMessage());
+            return;
+        }
+
+        if (projetos != null && !projetos.isEmpty()) {
+            final StringBuilder sb = new StringBuilder();
+            for (final Projeto projeto : projetos) {
+                if (sb.length() > 0) {
+                    sb.append("~");
+                }
+                sb.append(
+                    String.format("%s!%s!%s!%s",
+                        projeto.getMnemonico(),
+                        projeto.getUg(),
+                        projeto.isLotacaoSuperior() ? "Sim" : "Não",
+                        projeto.getNomeProjeto()));
+            }
+            out.print("prj|");
+            out.println(sb.toString());
+        }
+        out.close();
+
+    }
+
 
     private void gravarArquivoRetornoApropriacao(final List<TaskDailySummary> tasksSum) {
         final String exportFolder = this.apropriationFile.getInputFile().getParent();
@@ -230,17 +264,12 @@ public class Apropriator {
 
     }
 
-    private boolean isToCaptureProjects() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
     private void captureProjects() {
         final HomePage homePage = doLogin();
         final ApropriationPage apropriationPage =
             homePage.gotoApropriationPage(isApropriacaoSubordinado());
 
-        final String title = "Apropriator v" + getAppVersion();
+        final String title = "Apropriator v" + getAppVersion() + " - Capturar projetos";
 
         final CaptureProjectsWindow captureProjects = new CaptureProjectsWindow(title,
             this.apropriationFile.getProjects().values(), apropriationPage);
@@ -251,11 +280,6 @@ public class Apropriator {
 
         gravarArquivoRetornoProjetos(projetos);
 
-    }
-
-
-    private void gravarArquivoRetornoProjetos(Collection<Projeto> projetos) {
-        // TODO Auto-generated method stub
     }
 
     private void apropriate() {

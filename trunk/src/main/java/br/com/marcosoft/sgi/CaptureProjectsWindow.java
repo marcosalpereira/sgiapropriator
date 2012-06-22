@@ -169,6 +169,7 @@ public class CaptureProjectsWindow extends JDialog {
             		filtro.add(lblProgresso);
             		lblProgresso.setText("UG.Cliente");
             		lblProgresso.setForeground(new java.awt.Color(254,254,254));
+            		lblProgresso.setPreferredSize(new java.awt.Dimension(124, 15));
             	}
             	{
             		txtUgCliente = new JTextField();
@@ -299,7 +300,7 @@ public class CaptureProjectsWindow extends JDialog {
 
         this.setUndecorated(true);
         this.pack();
-        this.setSize(739, 242);
+        this.setSize(755, 387);
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         centerMe();

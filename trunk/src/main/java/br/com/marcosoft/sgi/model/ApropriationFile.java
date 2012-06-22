@@ -16,6 +16,8 @@ public class ApropriationFile {
 
     private final Map<String, Projeto> projects = new HashMap<String, Projeto>();
 
+    private boolean captureProjects;
+
     public List<TaskRecord> getTasksRecords() {
         return tasksRecords;
     }
@@ -135,6 +137,14 @@ public class ApropriationFile {
 
     public void setInputFile(File inputFile) {
         this.inputFile = inputFile;
+    }
+
+    public void setCaptureProjects(boolean captureProjects) {
+        this.captureProjects = captureProjects;
+    }
+
+    public boolean isCaptureProjects() {
+        return captureProjects;
     }
 
 }
