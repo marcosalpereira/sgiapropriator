@@ -6,6 +6,7 @@
 '0.6 - Limpar somente os dados ja registrados
 '0.7 - Informar se NÃO encontrar arquivo de retorno
 '0.8 - exibir contador ao esperar por arquivo retorno
+'0.9 - 
 
 Const VERSION = "0.8"
 
@@ -26,18 +27,32 @@ Const MAX_ROW = 208
 Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
-    waitForReturnFile "/home/54706424372/Documentos/apropriacao/sgi.ret"
+'   waitForReturnFile "/home/54706424372/Documentos/apropriacao/sgi.ret"
+export
 end sub
+
+Sub importProjects()
+  Dim sFilename As String
+  sFilename = getDocDir() & "sgi.csv"  
+  writeCaptureProjectCsvFile sFileName
+  execImportApp sFilename
+End Sub
 
 'Exportar os dados para o SGI
 sub export
   Dim sFilename As String
   sFilename = getDocDir() & "sgi.csv"  
-  writeCsvFile sFileName
+  writeTaskCsvFile sFileName
   execImportApp sFilename  
 end sub
 
-Sub writeCsvFile(sFilename as String)
+sub setActiveSheet(index as integer) 
+  oDoc = thisComponent
+  oSheets = oDoc.Sheets()
+  oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(index))
+End sub
+
+Sub writeCaptureProjectCsvFile(sFilename as String)
   Dim oDoc As Object ' The current Document
   Dim iFileNo as Integer
   Dim sLine As String
@@ -45,16 +60,16 @@ Sub writeCsvFile(sFilename as String)
   Dim oSheet As Object
   Dim oSheets As Object ' A collection of all sheets
 
-  oDoc = thisComponent
-  oSheets = oDoc.Sheets()
 
   iFileNo = FreeFile
   open sFilename for output as iFileNo
   
   print #iFileNo, "cfg|version|" & VERSION
 
+  print #iFileNo, "cap"
+
   'Export config  
-  oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(1))
+  setActiveSheet(1)
   For row = 0 to MAX_ROW 
     if (getText(0, row) = "") Then
        Exit For
@@ -63,8 +78,58 @@ Sub writeCsvFile(sFilename as String)
     print #iFileNo, sLine
   Next row  
   
+  'Export Projects
+  setActiveSheet(2)
+  For row = 1 to MAX_ROW 
+    if (getText(0, row) = "") Then
+       Exit For
+    End if
+    sLine = "prj|" & getText(0, row) & "|" & getText(1, row) & "|" & getText(2, row) & "|" & getText(3, row)
+    print #iFileNo, sLine
+  Next row    
+  
+  close #iFileNo
+  
+End Sub
+
+
+
+Sub writeTaskCsvFile(sFilename as String)
+  Dim oDoc As Object ' The current Document
+  Dim iFileNo as Integer
+  Dim sLine As String
+  Dim iRowsCount as Integer
+  Dim oSheet As Object
+  Dim oSheets As Object ' A collection of all sheets
+
+
+  iFileNo = FreeFile
+  open sFilename for output as iFileNo
+  
+  print #iFileNo, "cfg|version|" & VERSION
+
+  'Export config  
+  setActiveSheet(1)
+  For row = 0 to MAX_ROW 
+    if (getText(0, row) = "") Then
+       Exit For
+    End if
+    sLine = "cfg|" & getText(0, row) & "|" & getText(1, row)
+    print #iFileNo, sLine
+  Next row  
+  
+  'Export Projects
+  setActiveSheet(2)
+  For row = 1 to MAX_ROW 
+    if (getText(0, row) = "") Then
+       Exit For
+    End if
+    sLine = "prj|" & getText(0, row) & "|" & getText(1, row) & "|" & getText(2, row) & "|" & getText(3, row)
+    print #iFileNo, sLine
+  Next row    
+  
   'Export data
-  oDoc.CurrentController.setActiveSheet(oSheets.getByIndex(0))
+  setActiveSheet(0)
   For row = FIRST_ROW to MAX_ROW 
     if (getText(COL_DATE, row) = "") Then
        Exit For
@@ -78,6 +143,7 @@ Sub writeCsvFile(sFilename as String)
         iRowsCount = iRowsCount + 1
      End if
   Next row
+  
   
   close #iFileNo
   
@@ -373,6 +439,8 @@ Sub importReturnFile(inputFileName as String)
         atualizarListaValidacao CInt(aLine(1)), aLine(2)
     ElseIf (aLine(0) = "set") Then
         setText CInt(aLine(1)), CInt(aLine(2)), aLine(3)
+    ElseIf (aLine(0) = "prj") Then
+        carregarProjetosCapturados aLine(1)
     End if
   WEnd
   
@@ -381,6 +449,26 @@ Sub importReturnFile(inputFileName as String)
   saveMe()
   
 End Sub
+
+sub carregarProjetosCapturados(projetosSerializados as String)
+    setActiveSheet(2)
+    
+    For i = 1 to 100
+        for j = 0 to 3
+            setText i, j, ""
+        Next j
+    Next i
+    
+    projetos = split(projetosSerializados, "~")
+    For i = 0 to projetos.length()
+        aProjeto = split(projetos(i), "!")
+        for j = 0 to 3
+            setText i, j, aProjeto(j)
+        Next j      
+    Next
+    
+    setActiveSheet(0)
+End sub
 
 sub arquivoRetornoPresente(inputFileName as String) as boolean
   while true 
