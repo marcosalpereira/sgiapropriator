@@ -30,11 +30,8 @@ public class ApropriationFileParser {
     private static final int POS_CFG_PROPRIEDADE = 1;
 
     //Projetos
-    private static final int PRJ_QUANTIDADE_CAMPOS = 5;
-    private static final int POS_PRJ_MNEMONICO = 1;
-    private static final int POS_PRJ_UG        = 2;
-    private static final int POS_PRJ_LOT_SUPERIOR = 3;
-    private static final int POS_PRJ_NOME_PROJETO = 4;
+    private static final int PRJ_QUANTIDADE_CAMPOS = 2;
+    private static final int POS_PRJ_PROJETOS = 1;
 
     //Registros de registro de atividade
     private static final int POS_REG_NUMERO_LINHA = 1;
@@ -86,7 +83,7 @@ public class ApropriationFileParser {
             parseConfig(ret, fields);
 
         } else if (TR_PROJETO.equals(fields[POS_TIPO_REGISTRO])) {
-            parseProject(ret, fields);
+            parseProjects(ret, fields);
 
         } else if (TR_ATIVIDADE.equals(fields[POS_TIPO_REGISTRO])) {
             parseAtividade(ret, fields);
@@ -111,10 +108,19 @@ public class ApropriationFileParser {
         }
     }
 
-    private void parseProject(final ApropriationFile ret, final String[] fields)
+    private void parseProjects(final ApropriationFile ret, final String[] fields)
         throws IOException {
-        final Projeto projeto = parseProject(fields);
-        ret.getProjects().put(projeto.getMnemonico(), projeto);
+        if (fields.length != PRJ_QUANTIDADE_CAMPOS) {
+            throw new IOException(
+                "Erro lendo os projetos: Quantidade de campos difere da esperada!");
+        }
+        final String[] projetos = fields[POS_PRJ_PROJETOS].split(";");
+        for (final String prj : projetos) {
+            final Projeto projeto = new Projeto();
+            projeto.setNomeProjeto(prj.replaceAll("\"", ""));
+            ret.getProjects().add(projeto);
+        }
+
     }
 
     private void parseConfig(final ApropriationFile ret, final String[] fields)
@@ -125,19 +131,6 @@ public class ApropriationFileParser {
         }
         ret.getConfig().setProperty(
             fields[POS_CFG_PROPRIEDADE].trim(), fields[POS_CFG_VALOR_PROPRIEDADE].trim());
-    }
-
-    private Projeto parseProject(String[] fields) throws IOException {
-        final Projeto projeto = new Projeto();
-        if (fields.length != PRJ_QUANTIDADE_CAMPOS) {
-            throw new IOException(
-                "Erro lendo os projetos: Quantidade de campos difere da esperada!");
-        }
-        projeto.setMnemonico(fields[POS_PRJ_MNEMONICO]);
-        projeto.setLotacaoSuperior(!"Não".equals(fields[POS_PRJ_LOT_SUPERIOR]));
-        projeto.setNomeProjeto(fields[POS_PRJ_NOME_PROJETO]);
-        projeto.setUg(fields[POS_PRJ_UG]);
-        return projeto;
     }
 
     private BufferedReader getReader(File file) throws IOException {

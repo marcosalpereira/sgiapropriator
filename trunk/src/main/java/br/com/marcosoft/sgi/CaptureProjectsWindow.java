@@ -24,8 +24,8 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.WindowConstants;
@@ -70,6 +70,7 @@ public class CaptureProjectsWindow extends JDialog {
     private JButton btnAdicionarProjeto;
     private JLabel jLabel1;
     private JPanel resultados;
+    private JScrollPane jScrollPane1;
     private JList lstSelecionados;
     private JComboBox cboProjetos;
     private JButton btnCarregarProjetos;
@@ -244,22 +245,26 @@ public class CaptureProjectsWindow extends JDialog {
             	{
             		jLabel2 = new JLabel();
             		selecionados.add(jLabel2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-            		jLabel2.setText("Projetos Selecionados");
+            		jLabel2.setText("Projetos Selecionados [Duplo click para remover o projeto]");
             		jLabel2.setForeground(new java.awt.Color(254,254,254));
             	}
             	{
-            		final ListModel lstSelecionadosModel =
-            				new DefaultComboBoxModel(projetos.toArray());
-            		lstSelecionados = new JList();
-            		selecionados.add(lstSelecionados, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-            		lstSelecionados.setModel(lstSelecionadosModel);
-            		lstSelecionados.setToolTipText("Duplo click para remover o projeto");
-            		lstSelecionados.addMouseListener(new MouseAdapter() {
-            			@Override
-                        public void mouseClicked(MouseEvent evt) {
-            				lstSelecionadosMouseClicked(evt);
-            			}
-            		});
+            		jScrollPane1 = new JScrollPane();
+            		selecionados.add(jScrollPane1, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+            		{
+            			final ListModel lstSelecionadosModel =
+            					new DefaultComboBoxModel(projetos.toArray());
+            			lstSelecionados = new JList();
+            			jScrollPane1.setViewportView(lstSelecionados);
+            			lstSelecionados.setModel(lstSelecionadosModel);
+            			lstSelecionados.setToolTipText("Duplo click para remover o projeto");
+            			lstSelecionados.addMouseListener(new MouseAdapter() {
+            				@Override
+            				public void mouseClicked(MouseEvent evt) {
+            					lstSelecionadosMouseClicked(evt);
+            				}
+            			});
+            		}
             	}
             }
             {
@@ -322,12 +327,8 @@ public class CaptureProjectsWindow extends JDialog {
     }
 
     private void btnAdicionarProjetoActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
-        final String mnemonico = JOptionPane.showInputDialog("Informe Mnemonico para o projeto");
         final Projeto projeto = new Projeto();
-        projeto.setMnemonico(mnemonico);
-        projeto.setLotacaoSuperior(chkLotacaoSuperior.isSelected());
         projeto.setNomeProjeto((String) cboProjetos.getSelectedItem());
-        projeto.setUg(txtUgCliente.getText());
         final DefaultComboBoxModel model = (DefaultComboBoxModel) lstSelecionados.getModel();
         model.addElement(projeto);
     }
@@ -348,10 +349,13 @@ public class CaptureProjectsWindow extends JDialog {
     }
 
     private void btnCarregarProjetosActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+        final Cursor cursorAnterior = this.getCursor();
+        this.jp.setCursor(new Cursor(Cursor.WAIT_CURSOR));
         final Collection<String> nomesProjetos =
             apropriationPage.capturarProjetos(
                 txtUgCliente.getText(), chkLotacaoSuperior.isSelected());
         cboProjetos.setModel(new DefaultComboBoxModel(nomesProjetos.toArray()));
+        this.jp.setCursor(cursorAnterior);
     }
 
     public Collection<Projeto> getSelectedProjects() {

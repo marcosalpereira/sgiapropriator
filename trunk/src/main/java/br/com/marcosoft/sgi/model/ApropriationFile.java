@@ -2,9 +2,8 @@ package br.com.marcosoft.sgi.model;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public class ApropriationFile {
@@ -14,7 +13,7 @@ public class ApropriationFile {
 
     private final Config config = new Config();
 
-    private final Map<String, Projeto> projects = new HashMap<String, Projeto>();
+    private final Collection<Projeto> projects = new ArrayList<Projeto>();
 
     private boolean captureProjects;
 
@@ -127,7 +126,7 @@ public class ApropriationFile {
 
     }
 
-    public Map<String, Projeto> getProjects() {
+    public Collection<Projeto> getProjects() {
         return projects;
     }
 
