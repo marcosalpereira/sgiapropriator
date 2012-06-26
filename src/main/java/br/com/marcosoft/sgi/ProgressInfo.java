@@ -12,6 +12,7 @@ import java.util.Date;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.LineBorder;
@@ -22,6 +23,19 @@ import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 import br.com.marcosoft.sgi.util.MoveMouseListener;
 import br.com.marcosoft.sgi.util.Util;
 
+
+/**
+* This code was edited or generated using CloudGarden's Jigloo
+* SWT/Swing GUI Builder, which is free for non-commercial
+* use. If Jigloo is being used commercially (ie, by a corporation,
+* company or business for any purpose whatever) then you
+* should purchase a license for each developer using Jigloo.
+* Please visit www.cloudgarden.com for details.
+* Use of Jigloo implies acceptance of these licensing terms.
+* A COMMERCIAL LICENSE HAS NOT BEEN PURCHASED FOR
+* THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED
+* LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
+*/
 /**
  *
  */
@@ -42,12 +56,16 @@ public class ProgressInfo extends JFrame {
     private javax.swing.JLabel txtDuracao;
     private javax.swing.JLabel txtMacro;
     private javax.swing.JLabel txtProgresso;
+    private JTextField lblMessage;
+    private JPanel jPanel1;
     private JPanel jp;
     private javax.swing.JLabel txtProjeto;
 
     private JLabel lblData;
 
     private JLabel txtData;
+
+    private String infoMessage;
 
     /** Creates new form NewJPanel */
     public ProgressInfo(String title) {
@@ -79,17 +97,40 @@ public class ProgressInfo extends JFrame {
 
 
             getContentPane().add(jp, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-
             {
-                lblTitle = new javax.swing.JLabel();
-                jp.add(lblTitle, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(5, 10, 15, 10), 0, 0));
-                lblTitle.setBackground(new java.awt.Color(249, 249, 249));
-                lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-                lblTitle.setText(title);
-                lblTitle.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
-                lblTitle.setOpaque(true);
-                lblTitle.setSize(679, 22);
-                lblTitle.setPreferredSize(new java.awt.Dimension(0, 22));
+            	jPanel1 = new JPanel();
+            	final GridBagLayout jPanel1Layout = new GridBagLayout();
+            	jp.add(jPanel1, new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.HORIZONTAL, new Insets(5, 10, 15, 10), 0, 0));
+            	jPanel1Layout.rowWeights = new double[] {0.1, 0.1};
+            	jPanel1Layout.rowHeights = new int[] {7, 7};
+            	jPanel1Layout.columnWeights = new double[] {0.1};
+            	jPanel1Layout.columnWidths = new int[] {7};
+            	jPanel1.setLayout(jPanel1Layout);
+            	jPanel1.setBackground(new java.awt.Color(58,71,106));
+            	{
+            		lblTitle = new javax.swing.JLabel();
+            		jPanel1.add(lblTitle, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+            		lblTitle.setBackground(new java.awt.Color(249, 249, 249));
+            		lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            		lblTitle.setText(title);
+            		lblTitle.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+            		lblTitle.setOpaque(true);
+            		lblTitle.setSize(679, 22);
+            		lblTitle.setPreferredSize(new java.awt.Dimension(0, 22));
+            	}
+            	{
+            		lblMessage = new JTextField();
+            		jPanel1.add(lblMessage, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 0, 0), 0, 0));
+            		lblMessage.setText(title);
+            		lblMessage.setEditable(false);
+            		lblMessage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            		lblMessage.setOpaque(true);
+            		lblMessage.setBackground(new java.awt.Color(249,249,249));
+            		lblMessage.setPreferredSize(new java.awt.Dimension(0,22));
+            		lblMessage.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+            		lblMessage.setSize(679, 22);
+            		lblMessage.setVisible(false);
+            	}
             }
 
             {
@@ -215,6 +256,12 @@ public class ProgressInfo extends JFrame {
     }
 
     public void setInfo(String progresso, TaskDailySummary tds) {
+        if (this.infoMessage == null) {
+            lblMessage.setVisible(false);
+        } else {
+            lblMessage.setText(infoMessage);
+            lblMessage.setVisible(true);
+        }
         txtData.setText(Util.formatDate(tds.getData()));
         txtProgresso.setText(progresso);
         txtAtividade.setText(tds.getFirstTask().getDescricao());
@@ -226,7 +273,15 @@ public class ProgressInfo extends JFrame {
     public static void main(String[] args) {
         final TaskDailySummary tds = new TaskDailySummary();
         tds.setData(new Date());
-        new ProgressInfo("casa").setInfo("1/1", tds);
+        final ProgressInfo progressInfo = new ProgressInfo("casa");
+        progressInfo.setInfoMessage("Uma nova versão está diponível em "
+            + "http://code.google.com/p/sgiapropriator/downloads/list");
+        //progressInfo.setInfoMessage(null);
+        progressInfo.setInfo("1/1", tds);
+    }
+
+    public void setInfoMessage(String message) {
+        this.infoMessage = message;
     }
 
 }

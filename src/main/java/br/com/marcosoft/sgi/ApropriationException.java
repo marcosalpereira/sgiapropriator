@@ -1,7 +1,7 @@
 package br.com.marcosoft.sgi;
 
 /**
- * Apropriation Exception
+ * My Application Exception.
  */
 public class ApropriationException extends Exception {
 
@@ -12,6 +12,10 @@ public class ApropriationException extends Exception {
 
     public ApropriationException(String message) {
         super(message);
+    }
+
+    public ApropriationException(Throwable cause) {
+        super(cause);
     }
 
 }

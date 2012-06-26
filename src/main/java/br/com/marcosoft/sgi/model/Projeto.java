@@ -32,6 +32,6 @@ public class Projeto {
 
     @Override
     public String toString() {
-        return this.mnemonico + "-" + this.nomeProjeto;
+        return this.nomeProjeto;
     }
 }

@@ -11,7 +11,6 @@ import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_TIPO_INSUMO;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_UG_CLIENTE;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -46,27 +45,29 @@ import br.com.marcosoft.sgi.util.URLUtils;
  */
 public class Apropriator {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
         final File inputFile = parseArgs(args);
         if (inputFile == null) {
             JOptionPane.showMessageDialog(null, "Erro acessando arquivo importação!");
         } else {
             final Apropriator apropriator = new Apropriator();
-            apropriator.checkForNewVersion();
-            apropriator.doItForMePlease(inputFile);
+            try {
+                apropriator.doItForMePlease(inputFile);
+            } catch (final ApropriationException e) {
+                JOptionPane.showMessageDialog(null, "Um erro inesperado ocorreu!\n" + e.getMessage());
+                apropriator.gravarArquivoRetornoErro(e, inputFile);
+                e.printStackTrace();
+            }
         }
     }
 
-    private void checkForNewVersion() {
+    private String getNewVersionMessage() {
+        return "Uma nova versão está diponível em "
+            + "http://code.google.com/p/sgiapropriator/downloads/list";
+    }
+
+    private boolean isNewVersion() {
         final String appVersion = getAppVersion();
-        if (isNewVersion(appVersion)) {
-            final String text = "Uma nova versão está diponível em "
-                + "http://code.google.com/p/sgiapropriator/downloads/list";
-            TopMostMessage.message(text);
-        }
-    }
-
-    private boolean isNewVersion(final String appVersion) {
         final String downloadsListPage =
             URLUtils.downloadFile("http://code.google.com/p/sgiapropriator/downloads/list");
         final String latestVersion = getLatestVersion(downloadsListPage);
@@ -119,30 +120,29 @@ public class Apropriator {
     private final ApplicationProperties applicantionProperties = new ApplicationProperties(
         "sgiApropriator");
 
-    public void doItForMePlease(final File inputFile) throws IOException {
+    public void doItForMePlease(final File inputFile) throws ApropriationException {
 
-        final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
-        apropriationFile = apropriationFileParser.parse();
-
-        if (!verificarCompatibilidade()) {
-            return;
-        }
-
+        parseFile(inputFile);
+        verificarCompatibilidade();
         iniciarSelenium(apropriationFile.getConfig());
 
-        try {
-            if (apropriationFile.isCaptureProjects()) {
-                captureProjects();
-            } else {
-                apropriate();
-            }
-        } catch (final RuntimeException e) {
-            JOptionPane.showMessageDialog(null, "Um erro inesperado ocorreu!\n" + e.getMessage());
-            e.printStackTrace();
+        if (apropriationFile.isCaptureProjects()) {
+            captureProjects();
+        } else {
+            apropriate();
         }
 
         SeleniumSupport.stopSelenium();
 
+    }
+
+    private void parseFile(final File inputFile) throws ApropriationException {
+        final ApropriationFileParser apropriationFileParser = new ApropriationFileParser(inputFile);
+        try {
+            apropriationFile = apropriationFileParser.parse();
+        } catch (final IOException e) {
+            throw new ApropriationException(e);
+        }
     }
 
     private void iniciarSelenium(Config config) {
@@ -154,28 +154,42 @@ public class Apropriator {
     /**
      * Verificar a compatibilidade desta implementacao com a versao do arquivo de integracao.
      * @param strVersion versao que esta no arquivo de integracao
-     * @return
+     * @throws ApropriationException
      */
-    private boolean verificarCompatibilidade() {
+    private void verificarCompatibilidade() throws ApropriationException {
         final String strVersion = System.getProperty("version");
         if (strVersion == null) {
-            return true;
+            return;
         }
         final double version = Double.parseDouble(strVersion);
         if (version < 0.4) {
-            JOptionPane.showMessageDialog(null, "Não sei tratar arquivos na versão:" + strVersion);
-            return false;
+            throw new ApropriationException("Não sei tratar arquivos na versão:" + strVersion);
         }
-        return true;
+    }
+
+    private void gravarArquivoRetornoErro(ApropriationException erro, File inputFile) {
+        final String exportFolder = inputFile.getParent();
+
+        final String fileName = exportFolder + File.separator + "sgi.ret";
+        final PrintWriter out;
+        try {
+            out = new PrintWriter(fileName, "UTF-8");
+        } catch (final IOException e) {
+            JOptionPane.showMessageDialog(null, "Nao consegui gravar arquivo retorno!\n"
+                + e.getMessage());
+            return;
+        }
+        out.println("err|" + erro.getMessage());
+        out.close();
     }
 
     private void gravarArquivoRetornoProjetos(Collection<Projeto> projetos) {
         final String exportFolder = this.apropriationFile.getInputFile().getParent();
 
         final String fileName = exportFolder + File.separator + "sgi.ret";
-        PrintWriter out;
+        final PrintWriter out;
         try {
-            out = new PrintWriter(new FileWriter(fileName));
+            out = new PrintWriter(fileName, "UTF-8");
         } catch (final IOException e) {
             JOptionPane.showMessageDialog(null, "Nao consegui gravar arquivo retorno!\n"
                 + e.getMessage());
@@ -186,14 +200,10 @@ public class Apropriator {
             final StringBuilder sb = new StringBuilder();
             for (final Projeto projeto : projetos) {
                 if (sb.length() > 0) {
-                    sb.append("~");
+                    sb.append(";");
                 }
                 sb.append(
-                    String.format("%s!%s!%s!%s",
-                        projeto.getMnemonico(),
-                        projeto.getUg(),
-                        projeto.isLotacaoSuperior() ? "Sim" : "Não",
-                        projeto.getNomeProjeto()));
+                    String.format("%s", aspas(projeto.getNomeProjeto())));
             }
             out.print("prj|");
             out.println(sb.toString());
@@ -202,6 +212,9 @@ public class Apropriator {
 
     }
 
+    private String aspas(String string) {
+        return "\"" + string + "\"";
+    }
 
     private void gravarArquivoRetornoApropriacao(final List<TaskDailySummary> tasksSum) {
         final String exportFolder = this.apropriationFile.getInputFile().getParent();
@@ -209,7 +222,7 @@ public class Apropriator {
         final String fileName = exportFolder + File.separator + "sgi.ret";
         PrintWriter out;
         try {
-            out = new PrintWriter(new FileWriter(fileName));
+            out = new PrintWriter(fileName, "UTF-8");
         } catch (final IOException e) {
             JOptionPane.showMessageDialog(null, "Nao consegui gravar arquivo retorno!\n"
                 + e.getMessage());
@@ -272,7 +285,7 @@ public class Apropriator {
         final String title = "Apropriator v" + getAppVersion() + " - Capturar projetos";
 
         final CaptureProjectsWindow captureProjects = new CaptureProjectsWindow(title,
-            this.apropriationFile.getProjects().values(), apropriationPage);
+            this.apropriationFile.getProjects(), apropriationPage);
 
         final Collection<Projeto> projetos = captureProjects.getSelectedProjects();
 
@@ -298,6 +311,9 @@ public class Apropriator {
 
         final String title = "Apropriator v" + getAppVersion();
         final ProgressInfo progressInfo = new ProgressInfo(title);
+        if (isNewVersion()) {
+            progressInfo.setInfoMessage(getNewVersionMessage());
+        }
 
         int i = 0;
 
