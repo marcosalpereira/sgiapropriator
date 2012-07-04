@@ -1,5 +1,7 @@
 package br.com.marcosoft.sgi.selenium;
 
+import java.io.File;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverBackedSelenium;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -36,7 +38,7 @@ public class SeleniumSupport {
     private static WebDriver getDriver(Config config) {
         final String browser = config.getBrowserType();
         if ("chrome".equals(browser)) {
-            return getChromeDriver();
+            return getChromeDriver(config);
         }
         return getFirefoxDriver(config);
     }
@@ -49,10 +51,16 @@ public class SeleniumSupport {
         return driver;
     }
 
-    private static WebDriver getChromeDriver() {
+    private static WebDriver getChromeDriver(Config config) {
         final String key = "webdriver.chrome.driver";
-        if (System.getProperty(key) != null) {
-            System.setProperty(key, "/usr/bin/chromedriver");
+        if (System.getProperty(key) == null) {
+            final String planilhaDir = config.getPlanilhaDir();
+            final String chromedriverPath = planilhaDir + File.separator + "chromedriver";
+            if (new File(chromedriverPath).canExecute()) {
+                System.setProperty(key, chromedriverPath);
+            } else {
+                System.setProperty(key, "/usr/bin/chromedriver");
+            }
         }
         final WebDriver driver = new ChromeDriver();
         return driver;

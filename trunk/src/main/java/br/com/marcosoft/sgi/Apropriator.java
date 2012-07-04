@@ -53,7 +53,7 @@ public class Apropriator {
             final Apropriator apropriator = new Apropriator();
             try {
                 apropriator.doItForMePlease(inputFile);
-            } catch (final ApropriationException e) {
+            } catch (final Throwable e) {
                 JOptionPane.showMessageDialog(null, "Um erro inesperado ocorreu!\n" + e.getMessage());
                 apropriator.gravarArquivoRetornoErro(e, inputFile);
                 e.printStackTrace();
@@ -147,8 +147,11 @@ public class Apropriator {
 
     private void iniciarSelenium(Config config) {
         final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
-        SeleniumSupport.initSelenium(config);
-        waitWindow.dispose();
+        try {
+            SeleniumSupport.initSelenium(config);
+        } finally {
+            waitWindow.dispose();
+        }
     }
 
     /**
@@ -157,7 +160,7 @@ public class Apropriator {
      * @throws ApropriationException
      */
     private void verificarCompatibilidade() throws ApropriationException {
-        final String strVersion = System.getProperty("version");
+        final String strVersion = getMacrosVersion();
         if (strVersion == null) {
             return;
         }
@@ -167,7 +170,7 @@ public class Apropriator {
         }
     }
 
-    private void gravarArquivoRetornoErro(ApropriationException erro, File inputFile) {
+    private void gravarArquivoRetornoErro(Throwable erro, File inputFile) {
         final String exportFolder = inputFile.getParent();
 
         final String fileName = exportFolder + File.separator + "sgi.ret";
@@ -309,7 +312,7 @@ public class Apropriator {
 
         final List<TaskDailySummary> tasksSum = sumTasks(tasks);
 
-        final String title = "Apropriator v" + getAppVersion();
+        final String title = "Apropriator v" + getAppVersion() + " - Macros" + getMacrosVersion();
         final ProgressInfo progressInfo = new ProgressInfo(title);
         if (isNewVersion()) {
             progressInfo.setInfoMessage(getNewVersionMessage());
@@ -335,6 +338,10 @@ public class Apropriator {
         progressInfo.dispose();
 
         gravarArquivoRetornoApropriacao(tasksSum);
+    }
+
+    private String getMacrosVersion() {
+        return this.apropriationFile.getConfig().getMacrosVersion();
     }
 
     private String getNomeSubordinado() {
