@@ -59,7 +59,7 @@ public class ApropriationFileParser {
     }
 
     public ApropriationFile parse() throws IOException {
-        final ApropriationFile ret = new ApropriationFile();
+        final ApropriationFile ret = new ApropriationFile(this.inputFile);
 
         final BufferedReader input = getReader(this.inputFile);
 
@@ -72,7 +72,7 @@ public class ApropriationFileParser {
         finally {
             input.close();
         }
-        ret.setInputFile(inputFile);
+
 
         return ret;
     }

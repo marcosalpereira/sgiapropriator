@@ -6,7 +6,7 @@
 '0.6 - Limpar somente os dados ja registrados
 '0.7 - Informar se NÃO encontrar arquivo de retorno
 '0.8 - exibir contador ao esperar por arquivo retorno
-'0.9 - 
+'0.9 - capturar projetos 
 
 Const VERSION = "0.8"
 
@@ -14,6 +14,7 @@ Const COL_REG = 0
 Const COL_DATE = 1
 Const COL_WEEK_DAY = 2
 Const COL_ADJUST_SGI = 3
+Const COL_PROJECT = 6
 Const COL_MACRO = 7
 Const COL_ACTIVITY = 11
 Const COL_TIME_INI = 12
@@ -27,8 +28,8 @@ Const MAX_ROW = 208
 Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
-'   waitForReturnFile "/home/54706424372/Documentos/apropriacao/sgi.ret"
-export
+'   writeCaptureProjectCsvFile "/home/54706424372/Documentos/apropriacao/sgi.csv"
+'   importReturnFile "/home/54706424372/Documentos/apropriacao/sgi.ret"
 end sub
 
 Sub importProjects()
@@ -78,15 +79,11 @@ Sub writeCaptureProjectCsvFile(sFilename as String)
     print #iFileNo, sLine
   Next row  
   
-  'Export Projects
-  setActiveSheet(2)
-  For row = 1 to MAX_ROW 
-    if (getText(0, row) = "") Then
-       Exit For
-    End if
-    sLine = "prj|" & getText(0, row) & "|" & getText(1, row) & "|" & getText(2, row) & "|" & getText(3, row)
-    print #iFileNo, sLine
-  Next row    
+  'Export Projects  
+  print #iFileNo, "prj|" & getListaProjetos()
+  
+  'Deixar sheet 0 ativa
+  setActiveSheet(0)
   
   close #iFileNo
   
@@ -117,16 +114,6 @@ Sub writeTaskCsvFile(sFilename as String)
     sLine = "cfg|" & getText(0, row) & "|" & getText(1, row)
     print #iFileNo, sLine
   Next row  
-  
-  'Export Projects
-  setActiveSheet(2)
-  For row = 1 to MAX_ROW 
-    if (getText(0, row) = "") Then
-       Exit For
-    End if
-    sLine = "prj|" & getText(0, row) & "|" & getText(1, row) & "|" & getText(2, row) & "|" & getText(3, row)
-    print #iFileNo, sLine
-  Next row    
   
   'Export data
   setActiveSheet(0)
@@ -159,7 +146,7 @@ sub duplicate
     dim freeRow 
     freeRow = getAvailableRow(curPos.row)
     
-    setCurrentDateAt(COL_DATE, freeRow)
+    enterString(COL_DATE, freeRow, getCurrentDateStr())
     for col = COL_DATE + 2 to COL_TIME_INI - 1  
         setText(col, freeRow, getText(col, curPos.row))
     Next col    
@@ -167,10 +154,10 @@ sub duplicate
     'verificar se finaliza anterior
     str = getText(COL_TIME_END, freeRow - 1)
     if str = "" Then
-        setCurrentTimeAt(COL_TIME_END, freeRow - 1)
+        enterString(COL_TIME_END, freeRow - 1, getCurrentTimeStr())
     End if
     
-    setCurrentTimeAt(COL_TIME_INI, freeRow)
+    enterString(COL_TIME_INI, freeRow, getCurrentTimeStr())
     
     saveMe()
     
@@ -178,45 +165,108 @@ end sub
 
 
 'Limpar todos os dados registrados
-sub clean 
-    for row = FIRST_ROW to MAX_ROW 
-      if (getText(COL_REG, row) = "Sim") Then
+sub clean
+    Dim linhasDados(MAX_ROW, COL_TIME_END) as String
+    Dim idxLinhasDados as Integer
+
+    showStatusBar "Limpando atividades apropriadas..."
+   
+    'Salvar as nao apropriadas
+    idxLinhasDados = -1
+    for row = FIRST_ROW to MAX_ROW
+      if (getText(COL_DATE, row) = "") Then
+         exit for
+      End if
+      if (getText(COL_REG, row) = "Não") Then
+           idxLinhasDados = idxLinhasDados + 1       
+        for col = 0 to COL_TIME_END
+             linhasDados(idxLinhasDados, col) = getText(col, row)
+        Next
+      end if
+    Next
+   
+    'Limpar tudo
+    for row = FIRST_ROW to MAX_ROW   
+      if (getText(COL_DATE, row) = "") Then
+         exit for
+      End if
+
+      for col = 0 to COL_TIME_END
+         if (col = COL_REG) Then
+            setText(col, row, "Não")
+         Elseif (col = COL_WEEK_DAY) Then
+            'do nothing
+         Else
+            setText(col, row, "")
+         End if
+      Next col
+      setText(COL_TODO, row, "")
+    Next row
+   
+    'Restaurar as não apropriadas
+    Dim qtdSalvas as Integer
+    qtdSalvas = idxLinhasDados
+    idxLinhasDados = 0
+    if (qtdSalvas >= 0) Then
+        for row = FIRST_ROW to MAX_ROW         
           for col = 0 to COL_TIME_END
              if (col = COL_REG) Then
-                setText(col, row, "Não")
+                'do nothing
              Elseif (col = COL_WEEK_DAY) Then
                 'do nothing
              Else
-                setText(col, row, "")
+                enterString(col, row, linhasDados(idxLinhasDados, col))
              End if
           Next col
-          setText(COL_TODO, row, "")
-      End if
-    Next row
+          idxLinhasDados = idxLinhasDados + 1
+          if (idxLinhasDados > qtdSalvas) Then
+              exit for
+          End if
+        Next row
+     end if
+     
+     resetStatusBar
+   
 end sub
 
+'Setar a data corrente na linha/coluna.
+sub enterString(col as integer, row as integer, str as String)
+    gotoCell(col,row+1)
+    enterStringCurrentCell(str)
+end sub
 
-sub getCurrentTime  
+sub enterStringCurrentCell(str as String)
     dim document   as object
     dim dispatcher as object
     
     document   = ThisComponent.CurrentController.Frame
     dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
-    
+        
     dim args2(0) as new com.sun.star.beans.PropertyValue
     args2(0).Name = "StringName"
-    if (ThisComponent.CurrentSelection.CellAddress.column = COL_DATE) then  
-        args2(0).Value = getDate()      
-    else
-        args2(0).Value = getTime()
-    end if
+    args2(0).Value = str
     
     dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
+end sub
+
+'Manter compatibilidade com o bind (CTRL+T) da macro
+'TODO Alterar bind para chamar o metodo enterCurrentDateOrTimeCurrentCell
+Sub getCurrentTime()
+    enterCurrentDateOrTimeCurrentCell
+End sub
+
+sub enterCurrentDateOrTimeCurrentCell()
+
+    if (ThisComponent.CurrentSelection.CellAddress.column = COL_DATE) then
+        enterStringCurrentCell getCurrentDateStr() 
+    Else
+        enterStringCurrentCell getCurrentTimeStr()
+    End if
     
     'setar tempo inicial
     if (ThisComponent.CurrentSelection.CellAddress.column = COL_DATE) then      
         if getText(COL_TIME_INI, ThisComponent.CurrentSelection.CellAddress.row ) = "" Then
-            setCurrentTimeAt(COL_TIME_INI, ThisComponent.CurrentSelection.CellAddress.row)
+            enterString(COL_TIME_INI, ThisComponent.CurrentSelection.CellAddress.row, getCurrentTimeStr())
         End if
         gotoCell COL_ACTIVITY, ThisComponent.CurrentSelection.CellAddress.row + 1
     End if
@@ -248,53 +298,19 @@ sub gotoCell(col as integer, row as integer)
     dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args())
 end sub
 
-'Setar a hora corrente na linha/coluna.
-sub setCurrentTimeAt(col as integer, row as integer)
-    gotoCell(col,row+1)
-    
-    dim document   as object
-    dim dispatcher as object
-    
-    document   = ThisComponent.CurrentController.Frame
-    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
-        
-    dim args2(0) as new com.sun.star.beans.PropertyValue
-    args2(0).Name = "StringName"
-    args2(0).Value = getTime()
-    
-    dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
-end sub
-
-'Setar a data corrente na linha/coluna.
-sub setCurrentDateAt(col as integer, row as integer)
-    gotoCell(col,row+1)
-    
-    dim document   as object
-    dim dispatcher as object
-    
-    document   = ThisComponent.CurrentController.Frame
-    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
-        
-    dim args2(0) as new com.sun.star.beans.PropertyValue
-    args2(0).Name = "StringName"
-    args2(0).Value = getDate()      
-    
-    dispatcher.executeDispatch(document, ".uno:EnterString", "", 0, args2())
-end sub
-
 'Converter um numero de coluna na letra da coluna.
 sub colNumber2Letter(col as integer) as string
     colNumber2Letter = chr(col + 65)
 end sub
 
 'Pegar a data corrente.
-sub getDate() as String
-    getDate = format(date, "dd/mm/yyyy")  'Day(date) & "/" & month(date)  & "/" &  year(date)
+sub getCurrentDateStr() as String
+    getCurrentDateStr = format(date, "dd/mm/yyyy")
 end sub
 
 'Pegar a hora corrente
-sub getTime() as String 
-    getTime = hour(time) & ":" & minute(time)
+sub getCurrentTimeStr() as String 
+    getCurrentTimeStr = hour(time) & ":" & minute(time)
 end sub
 
 'Pegar o valor da linha/coluna na forma de string
@@ -304,25 +320,11 @@ sub getText(col as integer, row as integer) as String
     getText = oSheet.getCellByPosition(col,row).string 
 end sub
 
-'Pega o valor da linha/coluna
-sub getValue(col as integer, row as integer) as Variant
-    dim oSheet
-    oSheet = ThisComponent.CurrentController.getActiveSheet()
-    getValue = oSheet.getCellByPosition(col,row).value
-end sub
-
 'Setar texto na linha/coluna
 sub setText(col as integer, row as integer, str as String)
     dim oSheet
     oSheet = ThisComponent.CurrentController.getActiveSheet()
     oSheet.getCellByPosition(col,row).string = str
-end sub
-
-'Setar o valor na linha/coluna
-sub setValue(col as integer, row as integer, v as Variant)
-    dim oSheet
-    oSheet = ThisComponent.CurrentController.getActiveSheet()
-    oSheet.getCellByPosition(col,row).value = v
 end sub
 
 'Pegar a proxima linha disponivel (vazia)
@@ -440,7 +442,7 @@ Sub importReturnFile(inputFileName as String)
     ElseIf (aLine(0) = "set") Then
         setText CInt(aLine(1)), CInt(aLine(2)), aLine(3)
     ElseIf (aLine(0) = "prj") Then
-        carregarProjetosCapturados aLine(1)
+        atualizarProjetos aLine(1)
     End if
   WEnd
   
@@ -450,24 +452,35 @@ Sub importReturnFile(inputFileName as String)
   
 End Sub
 
-sub carregarProjetosCapturados(projetosSerializados as String)
-    setActiveSheet(2)
+'Atualizar os projetos da lista de validacao
+Sub atualizarProjetos(projetos as String)
+    dim pos as integer
+    Dim range as String
     
-    For i = 1 to 100
-        for j = 0 to 3
-            setText i, j, ""
-        Next j
-    Next i
+    oDoc = ThisComponent
+    oSheet = oDoc.getSheets.getByIndex(0)
+    range = getRangeParaColuna(COL_PROJECT)
+    Set CellRange = oSheet.getCellRangeByName(range)
+    Set newValidation = CellRange.Validation
+    newValidation.Type = com.sun.star.sheet.ValidationType.LIST
+    newValidation.Formula1 = projetos
+    newValidation.setOperator com.sun.star.Sheet.ConditionOperator.EQUAL
+    CellRange.Validation = newValidation
+
+End sub
+
+'Recuperar os projetos atuais
+Sub getListaProjetos() As String
+    Dim formulaAnterior as string
+    dim pos as integer
+    Dim range as String
     
-    projetos = split(projetosSerializados, "~")
-    For i = 0 to projetos.length()
-        aProjeto = split(projetos(i), "!")
-        for j = 0 to 3
-            setText i, j, aProjeto(j)
-        Next j      
-    Next
-    
-    setActiveSheet(0)
+    oDoc = ThisComponent
+    oSheet = oDoc.getSheets.getByIndex(0)
+    range = getRangeParaColuna(COL_PROJECT)
+    Set CellRange = oSheet.getCellRangeByName(range)
+    getListaProjetos = CellRange.Validation.Formula1
+
 End sub
 
 sub arquivoRetornoPresente(inputFileName as String) as boolean
@@ -484,9 +497,6 @@ sub arquivoRetornoPresente(inputFileName as String) as boolean
   wend
      
 End sub      
-
-
-
 
 'Marcar a linha informada como registrada
 Sub marcarComoRegistrado(numeroLinha as integer) 

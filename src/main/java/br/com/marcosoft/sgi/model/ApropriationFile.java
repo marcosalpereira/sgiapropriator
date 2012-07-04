@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class ApropriationFile {
-    private File inputFile;
+    private final File inputFile;
 
     private List<TaskRecord> tasksRecords = new ArrayList<TaskRecord>();
 
@@ -16,6 +16,10 @@ public class ApropriationFile {
     private final Collection<Projeto> projects = new ArrayList<Projeto>();
 
     private boolean captureProjects;
+
+    public ApropriationFile(File inputFile) {
+        this.inputFile = inputFile;
+    }
 
     public List<TaskRecord> getTasksRecords() {
         return tasksRecords;
@@ -29,7 +33,7 @@ public class ApropriationFile {
         return config;
     }
 
-    public static class Config {
+    public class Config {
         private static final String APP_PROPERTIES_PREFIX = "sgi.";
 
         private final Properties properties = new Properties();
@@ -51,14 +55,25 @@ public class ApropriationFile {
             if ("cpf".equals(key)) {
                 return APP_PROPERTIES_PREFIX + "cpf";
 
+            } else if ("version".equals(key)) {
+                return APP_PROPERTIES_PREFIX + "macros.version";
+
             } else if ("firefoxProfile".equals(key)) {
                 return APP_PROPERTIES_PREFIX + "browser.firefox.profile";
             }
             return key;
         }
 
+        public String getPlanilhaDir() {
+            return inputFile.getParent();
+        }
+
         private boolean isApplicationProperty(String key) {
             return key.startsWith(APP_PROPERTIES_PREFIX);
+        }
+
+        public String getMacrosVersion() {
+            return properties.getProperty(APP_PROPERTIES_PREFIX + "macros.version");
         }
 
         public String getCpf() {
@@ -132,10 +147,6 @@ public class ApropriationFile {
 
     public File getInputFile() {
         return inputFile;
-    }
-
-    public void setInputFile(File inputFile) {
-        this.inputFile = inputFile;
     }
 
     public void setCaptureProjects(boolean captureProjects) {
