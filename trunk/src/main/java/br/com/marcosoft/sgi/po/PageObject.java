@@ -1,5 +1,7 @@
 package br.com.marcosoft.sgi.po;
 
+import org.openqa.selenium.UnhandledAlertException;
+
 import br.com.marcosoft.sgi.WaitWindow;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 
@@ -136,8 +138,9 @@ public class PageObject {
     protected void waitWindow(final String locator, final String message) {
         WaitWindow waitWindow = null;
         for(;;) {
-            if (getSelenium().isElementPresent(locator)) {
-                clearAlerts();
+            final boolean elementPresent = isElementPresentIgnoreUnhandledAlertException(locator);
+            if (elementPresent) {
+                clearAlertsIgnoreUnhandledAlertException();
                 break;
             } else {
                 if (waitWindow == null) {
@@ -148,6 +151,34 @@ public class PageObject {
         if (waitWindow != null) {
             waitWindow.dispose();
         }
+    }
+
+    private void clearAlertsIgnoreUnhandledAlertException() {
+        try {
+            clearAlerts();
+        } catch (final SeleniumException e) {
+            if (e.getCause() instanceof UnhandledAlertException) {
+                System.out.println("IGNORE ANY: UnhandledAlertException: Modal dialog present");
+                sleep(1000);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private boolean isElementPresentIgnoreUnhandledAlertException(String locator) {
+        try {
+            return getSelenium().isElementPresent(locator);
+        } catch (final SeleniumException e) {
+            if (e.getCause() instanceof UnhandledAlertException) {
+                System.out.println("IGNORE ANY: UnhandledAlertException: Modal dialog present");
+                sleep(1000);
+            } else {
+                throw e;
+            }
+        }
+        return false;
+
     }
 
 
