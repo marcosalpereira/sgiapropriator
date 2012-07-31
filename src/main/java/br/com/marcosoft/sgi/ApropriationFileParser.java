@@ -78,7 +78,7 @@ public class ApropriationFileParser {
     }
 
     private void parseLine(final ApropriationFile ret, String line) throws IOException {
-        final String[] fields = line.split("\\|");
+        final String[] fields = line.split("\\|", -1);
         if (TR_CONFIG.equals(fields[POS_TIPO_REGISTRO])) {
             parseConfig(ret, fields);
 
@@ -87,6 +87,7 @@ public class ApropriationFileParser {
 
         } else if (TR_ATIVIDADE.equals(fields[POS_TIPO_REGISTRO])) {
             parseAtividade(ret, fields);
+
         } else if (TR_CAPTURE.equals(fields[POS_TIPO_REGISTRO])) {
             ret.setCaptureProjects(true);
         }
@@ -114,7 +115,10 @@ public class ApropriationFileParser {
             throw new IOException(
                 "Erro lendo os projetos: Quantidade de campos difere da esperada!");
         }
-        final String[] projetos = fields[POS_PRJ_PROJETOS].split(";");
+        final String projetosStr = fields[POS_PRJ_PROJETOS];
+        if (projetosStr.length() == 0) return;
+
+        final String[] projetos = projetosStr.split(";");
         for (final String prj : projetos) {
             final Projeto projeto = new Projeto();
             projeto.setNomeProjeto(prj.replaceAll("\"", ""));

@@ -6,9 +6,10 @@
 '0.6 - Limpar somente os dados ja registrados
 '0.7 - Informar se NÃO encontrar arquivo de retorno
 '0.8 - exibir contador ao esperar por arquivo retorno
-'0.9 - capturar projetos 
+'0.9 - capturar projetos
+'1.0 - ler arquivo retorno forcando encode UTF-8  
 
-Const VERSION = "0.8"
+Const VERSION = "1.0"
 
 Const COL_REG = 0
 Const COL_DATE = 1
@@ -24,7 +25,7 @@ Const COL_HOURS = 15
 Const COL_TODO  = 16
 
 Const FIRST_ROW = 1
-Const MAX_ROW = 208
+Const MAX_ROW = 199
 Const OLD_JAR_NAME = "sgi-apropriator-jar-with-dependencies.jar"
 
 sub main
@@ -79,8 +80,13 @@ Sub writeCaptureProjectCsvFile(sFilename as String)
     print #iFileNo, sLine
   Next row  
   
-  'Export Projects  
-  print #iFileNo, "prj|" & getListaProjetos()
+  'Export Projects
+  Dim projetos as String
+  projetos = getListaProjetos()
+  
+  if (projetos <> "") Then
+    print #iFileNo, "prj|" & projetos
+  End if 
   
   'Deixar sheet 0 ativa
   setActiveSheet(0)
@@ -425,29 +431,39 @@ Sub importReturnFile(inputFileName as String)
      Exit sub
   End if
 
-  Dim iFileNo as Integer
+  Dim inputFileNameUrl As String
+  Dim sf As Object  
   Dim sLine As String
   Dim aLine
   
-  iFileNo = FreeFile
-  open inputFileName for input as iFileNo  
+  inputFileNameUrl = convertToURL(inputFileName) 
+  
+  sf = createUnoService("com.sun.star.ucb.SimpleFileAccess")
+    
+  fileStream = sf.openFileRead(inputFileNameUrl) 
+  textFile = createUnoService("com.sun.star.io.TextInputStream") 
+  textFile.InputStream = fileStream 
+  textFile.Encoding = "UTF-8" 
 
-  While not eof(iFileNo)
-    Line Input #iFileNo, sLine
-    aLine = split(sLine, "|")
-    if (aLine(0) = "mcr" ) Then 
-        marcarComoRegistrado CInt(aLine(1))
-    ElseIf (aLine(0) = "alv") Then
-        atualizarListaValidacao CInt(aLine(1)), aLine(2)
-    ElseIf (aLine(0) = "set") Then
-        setText CInt(aLine(1)), CInt(aLine(2)), aLine(3)
-    ElseIf (aLine(0) = "prj") Then
-        atualizarProjetos aLine(1)
-    End if
-  WEnd
+  Do while not textFile.IsEOF 
+    sLine = textFile.readLine
+    if (sLine <> "") Then
+        aLine = split(sLine, "|")
+        if (aLine(0) = "mcr" ) Then 
+            marcarComoRegistrado CInt(aLine(1))
+        ElseIf (aLine(0) = "alv") Then
+            atualizarListaValidacao CInt(aLine(1)), aLine(2)
+        ElseIf (aLine(0) = "set") Then
+            setText CInt(aLine(1)), CInt(aLine(2)), aLine(3)
+        ElseIf (aLine(0) = "prj") Then
+            atualizarProjetos aLine(1)
+        End if
+     End if
+  Loop
   
-  close #iFileNo
-  
+  fileStream.closeInput 
+  textFile.closeInput
+    
   saveMe()
   
 End Sub
@@ -529,7 +545,7 @@ End sub
 Sub getRangeParaColuna(coluna as integer) as String
     Dim colStr as String
     colStr = colNumber2Letter(coluna)
-    getRangeParaColuna =  colStr & FIRST_ROW & ":" & colStr & MAX_ROW
+    getRangeParaColuna =  colStr & (FIRST_ROW + 1) & ":" & colStr & (MAX_ROW + 1)
 End Sub
 
 'Envolver a string com aspas
@@ -546,9 +562,9 @@ Sub isLinux() As Boolean
   isLinux = getGuiType() = 4  
 End Sub
 
-sub showStatusBar(text as String) 
+sub showStatusBar(texto as String) 
     if Not isNull(ThisComponent.CurrentController) Then
-        ThisComponent.CurrentController.StatusIndicator.Start(text, 0)
+        ThisComponent.CurrentController.StatusIndicator.Start(texto, 0)
     End if
 End sub
 
