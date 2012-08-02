@@ -171,7 +171,8 @@ public class Apropriator {
     }
 
     private void gravarArquivoRetornoErro(Throwable erro, File inputFile) {
-        final String exportFolder = inputFile.getParent();
+        String exportFolder = inputFile.getParent();
+        if (exportFolder == null) exportFolder = ".";
 
         final String fileName = exportFolder + File.separator + "sgi.ret";
         final PrintWriter out;
@@ -187,7 +188,7 @@ public class Apropriator {
     }
 
     private void gravarArquivoRetornoProjetos(Collection<Projeto> projetos) {
-        final String exportFolder = this.apropriationFile.getInputFile().getParent();
+        final String exportFolder = this.apropriationFile.getConfig().getPlanilhaDir();
 
         final String fileName = exportFolder + File.separator + "sgi.ret";
         final PrintWriter out;
@@ -220,7 +221,7 @@ public class Apropriator {
     }
 
     private void gravarArquivoRetornoApropriacao(final List<TaskDailySummary> tasksSum) {
-        final String exportFolder = this.apropriationFile.getInputFile().getParent();
+        final String exportFolder = this.apropriationFile.getConfig().getPlanilhaDir();
 
         final String fileName = exportFolder + File.separator + "sgi.ret";
         PrintWriter out;

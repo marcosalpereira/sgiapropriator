@@ -12,7 +12,7 @@ public class PageObject {
     /**
      * Time out em segundos.
      */
-    private static final int TIME_OUT_SEGUNDOS = 20;
+    private static final int TIME_OUT_SEGUNDOS = 10;
 
     public Selenium getSelenium() {
         return SeleniumSupport.getSelenium();
