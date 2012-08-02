@@ -1,5 +1,6 @@
 package br.com.marcosoft.sgi.po;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,6 +12,7 @@ import javax.swing.JOptionPane;
 import org.apache.commons.lang.StringUtils;
 
 import br.com.marcosoft.sgi.EsperarAjustesUsuario;
+import br.com.marcosoft.sgi.SelectOptionWindow;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.model.TaskRecord;
@@ -18,6 +20,7 @@ import br.com.marcosoft.sgi.util.Util;
 
 public class ApropriationPage extends PageObject {
 
+    public static final String SELECIONE_UMA_OPCAO = "--- Selecione uma opção ---";
     //IDs dos elementos na pagina.
     private static final String AP_HORAS = "AP_horas";
     private static final String AP_DT_AP = "AP_dt_ap";
@@ -50,8 +53,7 @@ public class ApropriationPage extends PageObject {
         }
         fillLotacaoSuperior(lotacaoSuperior);
         sleep(1000);
-        final String[] options = getSelenium().getSelectOptions(AP_SERVICO);
-        return Arrays.asList(options);
+        return selecionarProjetos();
     }
 
     /**
@@ -74,7 +76,7 @@ public class ApropriationPage extends PageObject {
 
         recoverableSelect(task, "UG Cliente", AP_UG_CLIENTE, task.getUgCliente());
 
-        recoverableSelect(task, "Projeto/Serviço", AP_SERVICO, task.getProjeto());
+        selectProject(task);
 
         type(AP_HORAS, Util.formatMinutes(qtdMinutos));
 
@@ -97,6 +99,51 @@ public class ApropriationPage extends PageObject {
         waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
     }
 
+    private void selectProject(Task task) {
+        try {
+            select(AP_SERVICO, task.getProjeto());
+        } catch (final NotSelectedException e) {
+            final String projetoSimilar = selecionarProjetoSimilar(task.getProjeto());
+            if (projetoSimilar != null) {
+                task.setControlarMudancas(true);
+                task.setProjeto(projetoSimilar);
+                task.setControlarMudancas(false);
+                recoverableSelect(task, "Projeto/Serviço", AP_SERVICO, projetoSimilar);
+            }
+        }
+
+    }
+
+    private String selecionarProjetoSimilar(String projetoOriginal) {
+        final Collection<String> selectOptions = selecionarProjetos();
+        for (final String option : selectOptions) {
+            if (Util.isSimilar(projetoOriginal, option)) {
+                final String message = String.format(
+                      "Nome projeto/serviço parece ter mudado de \n'%s'\npara\n'%s'\nAproprio com esse projeto/serviço novo?",
+                        projetoOriginal, option);
+                final int resposta = JOptionPane.showConfirmDialog(
+                    null, message, "Ajuste nome projeto similar", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (resposta == JOptionPane.OK_OPTION) {
+                    return option;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Collection<String> selecionarProjetos() {
+        final String[] selectOptions = getSelenium().getSelectOptions(AP_SERVICO);
+
+        final List<String> projetos = new ArrayList<String>();
+        for (final String option : selectOptions) {
+            if (SELECIONE_UMA_OPCAO.equals(option)) continue;
+            projetos.add(
+                option.replaceAll("\\(S\\)  \\- SUPDE", "(S) - SUPDE")
+            );
+        }
+        return projetos;
+    }
+
     private void recoverableSelect(Task task, String fieldName, String locator, String value) {
         if (value.length() == 0) {
             return;
@@ -104,16 +151,27 @@ public class ApropriationPage extends PageObject {
         try {
             select(locator, value);
         } catch (final NotSelectedException e) {
+            final Collection<String> opcoes = new ArrayList<String>();
+            final String ajustarNoSgi = "[Ajustar atividade no SGI]";
+            opcoes.add(ajustarNoSgi);
+            final String[] selectOptions = getSelenium().getSelectOptions(locator);
+            opcoes.addAll(Arrays.asList(selectOptions));
+            opcoes.remove(SELECIONE_UMA_OPCAO);
+
             final String message = String.format(
-                "Não consegui selecionar %s [%s]]\n\nDeseja selecionar no SGI?",
-                    fieldName, value);
-            final int opt = JOptionPane.showConfirmDialog(null, message,
-                "Erro selecionando campo", JOptionPane.YES_NO_OPTION);
-            if (opt != JOptionPane.OK_OPTION) {
-                throw e;
+                "Não consegui selecionar '%s'. Selecione uma das opções possíveis?", fieldName);
+            final SelectOptionWindow selectOptionWindow = new SelectOptionWindow(message, opcoes);
+            final String selectedOption = selectOptionWindow.getSelectedOption();
+            if (selectedOption == null) {
+                throw new CanceladoPeloUsuarioException();
             }
-            esperarAjustesUsuario("Seleção manual" + fieldName);
-            atualizarAtividadeComInformacoesUsuario(task);
+            if (ajustarNoSgi.equals(selectedOption)) {
+                esperarAjustesUsuario("Seleção manual" + fieldName);
+                atualizarAtividadeComInformacoesUsuario(task);
+            } else {
+                atualizarAtividadeComOpcaoSelecionada(task, locator, selectedOption);
+                recoverableSelect(task, fieldName, locator, selectedOption);
+            }
         }
     }
 
@@ -171,6 +229,25 @@ public class ApropriationPage extends PageObject {
                 clickAndWait(CK_LOT_SUPERIOR);
             }
         }
+    }
+
+    private void atualizarAtividadeComOpcaoSelecionada(Task task, String locator, String selectedOption) {
+        task.setControlarMudancas(true);
+
+        if (AP_UG_CLIENTE.equals(locator)) {
+            task.setUgCliente(selectedOption);
+
+        } else if (AP_MACRO_ATIVIDADE.equals(locator)) {
+            task.setMacro(selectedOption);
+
+        } else if (AP_SERVICO.equals(locator)) {
+            task.setProjeto(selectedOption);
+
+        } else if (AP_INSUMO.equals(locator)) {
+            task.setInsumo(selectedOption);
+
+        }
+        task.setControlarMudancas(false);
     }
 
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {

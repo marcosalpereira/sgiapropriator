@@ -65,7 +65,9 @@ public class ApropriationFile {
         }
 
         public String getPlanilhaDir() {
-            return inputFile.getParent();
+            final String parent = inputFile.getParent();
+            if (parent == null) return ".";
+            return parent;
         }
 
         private boolean isApplicationProperty(String key) {
