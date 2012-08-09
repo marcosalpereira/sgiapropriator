@@ -1,5 +1,10 @@
 package br.com.marcosoft.sgi.po;
 
+import static javax.swing.JOptionPane.OK_OPTION;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
+import static javax.swing.JOptionPane.YES_NO_OPTION;
+import static javax.swing.JOptionPane.showConfirmDialog;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,28 +72,23 @@ public class ApropriationPage extends PageObject {
         final int qtdMinutos = taskDailySummary.getSum();
 
         if (StringUtils.isNotEmpty(nomeSubordinado)) {
-            recoverableSelect(task, "Empregado", "AP_id_pessoa", nomeSubordinado);
+            recoverableSelect(taskDailySummary, "Empregado", "AP_id_pessoa", nomeSubordinado);
         }
 
-        recoverableSelect(task, "Data", AP_DT_AP, Util.formatDate(data));
+        recoverableSelect(taskDailySummary, "Data", AP_DT_AP, Util.formatDate(data));
 
         fillLotacaoSuperior(task.isLotacaoSuperior());
 
-        recoverableSelect(task, "UG Cliente", AP_UG_CLIENTE, task.getUgCliente());
+        recoverableSelect(taskDailySummary, "UG Cliente", AP_UG_CLIENTE, task.getUgCliente());
 
-        selectProject(task);
+        selectProject(taskDailySummary);
 
-        type(AP_HORAS, Util.formatMinutes(qtdMinutos));
+        final String minutes = Util.formatMinutes(qtdMinutos);
+        type(AP_HORAS, minutes);
 
-        recoverableSelect(task, "Macroatividade", AP_MACRO_ATIVIDADE, task.getMacro());
+        recoverableSelect(taskDailySummary, "Macroatividade", AP_MACRO_ATIVIDADE, task.getMacro());
 
-        //recoverableSelect(task, "Tipo de Hora", AP_TIPO_HORA, task.getTipoHora());
-
-        recoverableSelect(task, "Insumo", AP_INSUMO, task.getInsumo());
-
-//        if (getSelenium().isEditable(AP_TIPO_INSUMO)) {
-//            recoverableSelect(task, "Tipo de Insumo", AP_TIPO_INSUMO, task.getTipoInsumo());
-//        }
+        recoverableSelect(taskDailySummary, "Insumo", AP_INSUMO, task.getInsumo());
 
         if (!getSelenium().getValue(AP_OBS).equals(task.getDescricao())) {
             type(AP_OBS, task.getDescricao());
@@ -97,18 +97,67 @@ public class ApropriationPage extends PageObject {
         getSelenium().click(BTN_INCLUIR);
 
         waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
+
+        if (!apropriou(data, minutes, task)) {
+            final String message = "Não detectei que a apropriação foi realizada. Deseja ajustar e tentar novamente?" ;
+            final int reposta = showConfirmDialog(
+                null, message, "Erro na apropriação", YES_NO_OPTION, QUESTION_MESSAGE);
+            if (reposta == OK_OPTION) {
+                esperarAjustesUsuario("Ajustar apropriação");
+                atualizarAtividadeComInformacoesUsuario(taskDailySummary);
+                apropriate(taskDailySummary, nomeSubordinado);
+            } else {
+                throw new RuntimeException("Erro na apropriação da atividade");
+            }
+        }
     }
 
-    private void selectProject(Task task) {
+    private boolean apropriou(Date data, String minutes, Task task) {
+        if ("sim".equals(System.getProperty("sgi.naoVerificarApropriacao"))) {
+            return true;
+        }
+        final List<List<String>> table = getTable("AP_listagemPessoaTarefa");
+        for (final List<String> linha : table) {
+            if (linhaContemApropriacaoTarefa(linha, data, minutes, task)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean linhaContemApropriacaoTarefa(List<String> linha, Date data, String minutes, Task task) {
+        final String dataEsperada = Util.DD_MM_YYYY_FORMAT.format(data);
+        final String projeto = task.getProjeto()
+            .replaceAll("\\W", "").toLowerCase();
+
+        final String dataPagina = linha.get(0);
+        final String minutosPagina = linha.get(1);
+        final String ugPagina = linha.get(2);
+        final String projetoMacroPagina = linha.get(3);
+        final String projetoPagina = separarProjetoDaMacroAtividade(projetoMacroPagina)
+            .replaceAll("\\W", "").toLowerCase();
+
+        return dataEsperada.equals(dataPagina)
+            && minutes.equals(minutosPagina)
+            && task.getUgCliente().equals(ugPagina)
+            && projeto.startsWith(projetoPagina);
+    }
+
+    private String separarProjetoDaMacroAtividade(String projetoMacro) {
+        final int posBarra = projetoMacro.lastIndexOf('/');
+        if (posBarra == -1) return projetoMacro;
+        return projetoMacro.substring(0, posBarra - 1);
+    }
+
+    private void selectProject(TaskDailySummary taskDailySummary) {
+        final Task task = taskDailySummary.getFirstTask();
         try {
             select(AP_SERVICO, task.getProjeto());
         } catch (final NotSelectedException e) {
             final String projetoSimilar = selecionarProjetoSimilar(task.getProjeto());
             if (projetoSimilar != null) {
-                task.setControlarMudancas(true);
-                task.setProjeto(projetoSimilar);
-                task.setControlarMudancas(false);
-                recoverableSelect(task, "Projeto/Serviço", AP_SERVICO, projetoSimilar);
+                atualizarAtividadeComOpcaoSelecionada(taskDailySummary, AP_SERVICO, projetoSimilar);
+                recoverableSelect(taskDailySummary, "Projeto/Serviço", AP_SERVICO, projetoSimilar);
             }
         }
 
@@ -144,7 +193,7 @@ public class ApropriationPage extends PageObject {
         return projetos;
     }
 
-    private void recoverableSelect(Task task, String fieldName, String locator, String value) {
+    private void recoverableSelect(TaskDailySummary tds, String fieldName, String locator, String value) {
         if (value.length() == 0) {
             return;
         }
@@ -167,10 +216,10 @@ public class ApropriationPage extends PageObject {
             }
             if (ajustarNoSgi.equals(selectedOption)) {
                 esperarAjustesUsuario("Seleção manual" + fieldName);
-                atualizarAtividadeComInformacoesUsuario(task);
+                atualizarAtividadeComInformacoesUsuario(tds);
             } else {
-                atualizarAtividadeComOpcaoSelecionada(task, locator, selectedOption);
-                recoverableSelect(task, fieldName, locator, selectedOption);
+                atualizarAtividadeComOpcaoSelecionada(tds, locator, selectedOption);
+                recoverableSelect(tds, fieldName, locator, selectedOption);
             }
         }
     }
@@ -211,11 +260,7 @@ public class ApropriationPage extends PageObject {
         select(AP_SERVICO, task.getProjeto(), true, 2);
         type(AP_HORAS, Util.formatMinutes(qtdMinutos));
         select(AP_MACRO_ATIVIDADE, task.getMacro(), true, 2);
-        //select(AP_TIPO_HORA, task.getTipoHora(), true, 2);
         select(AP_INSUMO, task.getInsumo(), true, 2);
-//        if (getSelenium().isEditable(AP_TIPO_INSUMO)) {
-//            select(AP_TIPO_INSUMO, task.getTipoInsumo(), true, 2);
-//        }
         type(AP_OBS, task.getDescricao());
     }
 
@@ -231,23 +276,31 @@ public class ApropriationPage extends PageObject {
         }
     }
 
-    private void atualizarAtividadeComOpcaoSelecionada(Task task, String locator, String selectedOption) {
-        task.setControlarMudancas(true);
+    private void atualizarAtividadeComOpcaoSelecionada(TaskDailySummary tds, String locator, String novoValor) {
+        for (final Task task : tds.getTasks()) {
+            task.setControlarMudancas(true);
 
-        if (AP_UG_CLIENTE.equals(locator)) {
-            task.setUgCliente(selectedOption);
+            if (AP_UG_CLIENTE.equals(locator)) {
+                task.setUgCliente(novoValor);
 
-        } else if (AP_MACRO_ATIVIDADE.equals(locator)) {
-            task.setMacro(selectedOption);
+            } else if (AP_MACRO_ATIVIDADE.equals(locator)) {
+                task.setMacro(novoValor);
 
-        } else if (AP_SERVICO.equals(locator)) {
-            task.setProjeto(selectedOption);
+            } else if (AP_SERVICO.equals(locator)) {
+                task.setProjeto(novoValor);
 
-        } else if (AP_INSUMO.equals(locator)) {
-            task.setInsumo(selectedOption);
+            } else if (AP_INSUMO.equals(locator)) {
+                task.setInsumo(novoValor);
 
+            }
+            task.setControlarMudancas(false);
         }
-        task.setControlarMudancas(false);
+    }
+
+    private void atualizarAtividadeComInformacoesUsuario(final TaskDailySummary tds) {
+        for (final Task task : tds.getTasks()) {
+            atualizarAtividadeComInformacoesUsuario(task);
+        }
     }
 
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {
@@ -256,9 +309,7 @@ public class ApropriationPage extends PageObject {
         task.setUgCliente(getSelenium().getSelectedLabel(AP_UG_CLIENTE));
         task.setProjeto(getSelenium().getSelectedLabel(AP_SERVICO));
         task.setMacro(getSelenium().getSelectedLabel(AP_MACRO_ATIVIDADE));
-        //task.setTipoHora(getSelenium().getSelectedLabel(AP_TIPO_HORA));
         task.setInsumo(getSelenium().getSelectedLabel(AP_INSUMO));
-//        task.setTipoInsumo(getSelenium().getSelectedLabel(AP_TIPO_INSUMO));
         task.setDescricao(getSelenium().getValue(AP_OBS));
         task.setControlarMudancas(false);
     }

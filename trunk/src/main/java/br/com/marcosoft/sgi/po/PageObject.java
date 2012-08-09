@@ -1,6 +1,12 @@
 package br.com.marcosoft.sgi.po;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.openqa.selenium.By;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 import br.com.marcosoft.sgi.WaitWindow;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
@@ -14,8 +20,12 @@ public class PageObject {
      */
     private static final int TIME_OUT_SEGUNDOS = 10;
 
-    public Selenium getSelenium() {
+    protected Selenium getSelenium() {
         return SeleniumSupport.getSelenium();
+    }
+
+    protected WebDriver getWebDriver() {
+        return SeleniumSupport.getWebDriver();
     }
 
     /**
@@ -179,6 +189,24 @@ public class PageObject {
         }
         return false;
 
+    }
+
+    protected List<List<String>> getTable(String tableId) {
+        final List<List<String>> table = new ArrayList<List<String>>();
+        if (!getSelenium().isElementPresent(tableId)) {
+            return table;
+        }
+        final WebElement tableElement = getWebDriver().findElement(By.id(tableId));
+        final List<WebElement> rowsElements = tableElement.findElements(By.tagName("tr"));
+        for (final WebElement rowElement : rowsElements) {
+            final List<String> columns = new ArrayList<String>();
+            final List<WebElement> columnsElements = rowElement.findElements(By.tagName("td"));
+            for (final WebElement columnElement : columnsElements) {
+                columns.add(columnElement.getText());
+            }
+            table.add(columns);
+        }
+        return table;
     }
 
 

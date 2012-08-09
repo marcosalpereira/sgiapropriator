@@ -18,6 +18,7 @@ import com.thoughtworks.selenium.Selenium;
  */
 public class SeleniumSupport {
     private static Selenium selenium;
+    private static WebDriver webDriver;
 
     private SeleniumSupport() {
     }
@@ -26,13 +27,17 @@ public class SeleniumSupport {
         return selenium;
     }
 
+    public static WebDriver getWebDriver() {
+        return webDriver;
+    }
+
     /**
      * Inicializa o Selenium.
      */
     public static void initSelenium(Config config) {
-        final WebDriver driver = getDriver(config);
+        webDriver = getDriver(config);
         final String browserUrl = config.getUrlSgi();
-        selenium = new WebDriverBackedSelenium(driver, browserUrl);
+        selenium = new WebDriverBackedSelenium(webDriver, browserUrl);
     }
 
     private static WebDriver getDriver(Config config) {
