@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 
 import br.com.marcosoft.sgi.EsperarAjustesUsuario;
 import br.com.marcosoft.sgi.SelectOptionWindow;
+import br.com.marcosoft.sgi.model.ApropriationFile.Config;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.model.TaskRecord;
@@ -113,7 +114,7 @@ public class ApropriationPage extends PageObject {
     }
 
     private boolean apropriou(Date data, String minutes, Task task) {
-        if ("sim".equals(System.getProperty("sgi.naoVerificarApropriacao"))) {
+        if ("sim".equals(System.getProperty(Config.SGI_NAO_VERIFICAR_APROPRIACAO))) {
             return true;
         }
         final List<List<String>> table = getTable("AP_listagemPessoaTarefa");
