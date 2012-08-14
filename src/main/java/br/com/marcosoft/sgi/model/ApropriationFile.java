@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
 public class ApropriationFile {
     private final File inputFile;
@@ -34,9 +33,25 @@ public class ApropriationFile {
     }
 
     public class Config {
-        private static final String APP_PROPERTIES_PREFIX = "sgi.";
+        private static final String SGI_BROWSER_FIREFOX_PROFILE = "sgi.browser.firefox.profile";
 
-        private final Properties properties = new Properties();
+        private static final String SGI_BROWSER_TYPE = "sgi.browser.type";
+
+        private static final String SGI_URL = "sgi.url";
+
+        private static final String SGI_SUBORDINADO = "sgi.subordinado";
+
+        private static final String SGI_DEFAULT_TIPO_INSUMO = "sgi.defaultTipoInsumo";
+
+        private static final String SGI_DEFAULT_INSUMO = "sgi.defaultInsumo";
+
+        private static final String SGI_DEFAULT_TIPO_HORA = "sgi.defaultTipoHora";
+
+        private static final String SGI_MACROS_VERSION = "sgi.macros.version";
+
+        private static final String SGI_CPF = "sgi.cpf";
+
+        public static final String SGI_NAO_VERIFICAR_APROPRIACAO = "sgi.naoVerificarApropriacao";
 
         public void setProperty(String key, String value) {
             if (key == null || key.trim().length() == 0)
@@ -44,57 +59,48 @@ public class ApropriationFile {
 
             final String newKeyName = enforceNewKeyName(key);
 
-            if (isApplicationProperty(newKeyName)) {
-                properties.setProperty(newKeyName, value);
-            } else {
-                System.setProperty(newKeyName, value);
-            }
+            System.setProperty(newKeyName, value);
         }
 
         private String enforceNewKeyName(String key) {
             if ("cpf".equals(key)) {
-                return APP_PROPERTIES_PREFIX + "cpf";
+                return SGI_CPF;
 
             } else if ("version".equals(key)) {
-                return APP_PROPERTIES_PREFIX + "macros.version";
+                return SGI_MACROS_VERSION;
 
             } else if ("firefoxProfile".equals(key)) {
-                return APP_PROPERTIES_PREFIX + "browser.firefox.profile";
+                return SGI_BROWSER_FIREFOX_PROFILE;
             }
             return key;
         }
 
         public String getPlanilhaDir() {
             final String parent = inputFile.getParent();
-            if (parent == null) return ".";
+            if (parent == null)
+                return ".";
             return parent;
         }
 
-        private boolean isApplicationProperty(String key) {
-            return key.startsWith(APP_PROPERTIES_PREFIX);
-        }
-
         public String getMacrosVersion() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "macros.version");
+            return System.getProperty(SGI_MACROS_VERSION);
         }
 
         public String getCpf() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "cpf");
+            return System.getProperty(SGI_CPF);
         }
 
         public String getUrlSgi() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "url",
-                "https://sgi.portalcorporativo.serpro/");
+            return System.getProperty(SGI_URL, "https://sgi.portalcorporativo.serpro/");
         }
 
         public String getBrowserType() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "browser.type",
-                "firefox");
+            return System.getProperty(SGI_BROWSER_TYPE, "firefox");
         }
 
         public String getFirefoxProfile() {
-            final String firefoxProfile = properties.getProperty(APP_PROPERTIES_PREFIX
-                + "browser.firefox.profile", "default");
+            final String firefoxProfile = System.getProperty(SGI_BROWSER_FIREFOX_PROFILE,
+                "default");
             return checkCompatibilidadeFirefoxProfile(firefoxProfile);
         }
 
@@ -123,22 +129,20 @@ public class ApropriationFile {
         }
 
         public String getDefaultTipoHora() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "defaultTipoHora",
-                "Normal");
+            return System.getProperty(SGI_DEFAULT_TIPO_HORA, "Normal");
         }
 
         public String getDefaultInsumo() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "defaultInsumo",
+            return System.getProperty(SGI_DEFAULT_INSUMO,
                 "Desenvolvimento e Manutenção de Software");
         }
 
         public String getDefaultTipoInsumo() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "defaultTipoInsumo",
-                "Novo Sistema");
+            return System.getProperty(SGI_DEFAULT_TIPO_INSUMO, "Novo Sistema");
         }
 
         public String getNomeSubordinado() {
-            return properties.getProperty(APP_PROPERTIES_PREFIX + "subordinado");
+            return System.getProperty(SGI_SUBORDINADO);
         }
 
     }
