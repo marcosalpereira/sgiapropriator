@@ -259,7 +259,6 @@ public class Apropriator {
                     out.println(String.format("set|%s|%s|%s", COL_REG_INSUMO, task.getNumeroLinha(), task.getInsumo()));
                 }
                 if (task.isMacroMudou()) {
-                    //out.println(String.format("alv|%s|%s", COL_REG_MACRO ,task.getMacro()));
                     out.println(String.format("set|%s|%s|%s", COL_REG_MACRO, task.getNumeroLinha(), task.getMacro()));
                 }
                 if (task.isProjetoMudou()) {
