@@ -29,7 +29,7 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<outputDirectory>${basedir}/dist/version-${pom.version}</outputDirectory>
+					<outputDirectory>${basedir}/dist/version-${project.version}</outputDirectory>
 					<appendAssemblyId>false</appendAssemblyId>
 
 					<archive>
@@ -37,7 +37,7 @@
 							<mainClass>br.com.marcosoft.sgi.Apropriator</mainClass>
 						</manifest>
 						<manifestEntries>
-							<version>${pom.version}</version>
+							<version>${project.version}</version>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -64,7 +64,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${basedir}/dist/version-${pom.version}</outputDirectory>
+							<outputDirectory>${basedir}/dist/version-${project.version}</outputDirectory>
 							<resources>
 								<resource>
 									<directory>src/main/config</directory>
