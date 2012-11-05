@@ -72,7 +72,8 @@ public class ApropriationPage extends PageObject {
         final Task task = taskDailySummary.getFirstTask();
         final int qtdMinutos = taskDailySummary.getSum();
 
-        if (StringUtils.isNotEmpty(nomeSubordinado)) {
+        final boolean apropriacaoSubordinado = StringUtils.isNotEmpty(nomeSubordinado);
+        if (apropriacaoSubordinado) {
             recoverableSelect(taskDailySummary, "Empregado", "AP_id_pessoa", nomeSubordinado);
         }
 
@@ -97,7 +98,23 @@ public class ApropriationPage extends PageObject {
 
         getSelenium().click(BTN_INCLUIR);
 
-        waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
+        final boolean erroSgi = waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
+
+        if (erroSgi) {
+            final String message = "Parece que houve um problema no SGI! Deseja tentar novamente?";
+            final int reposta = showConfirmDialog(
+                null, message, "Erro na apropriação", YES_NO_OPTION, QUESTION_MESSAGE);
+            if (reposta == OK_OPTION) {
+                //TODO refatorar essa recuperaçao aqui
+                getSelenium().selectFrame("relative=top");
+                new HomePage()
+                    .gotoApropriationPage(apropriacaoSubordinado)
+                    .mostrarApropriacoesPeriodo();
+                apropriate(taskDailySummary, nomeSubordinado);
+            } else {
+                return;
+            }
+        }
 
         if (!apropriou(data, minutes, task)) {
             final String message = "Não detectei que a apropriação foi realizada. Deseja ajustar e tentar novamente?" ;

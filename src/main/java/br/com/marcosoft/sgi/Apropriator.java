@@ -276,6 +276,8 @@ public class Apropriator {
             }
         }
 
+        out.println();
+
         out.close();
 
     }

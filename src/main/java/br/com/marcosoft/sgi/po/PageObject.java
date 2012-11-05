@@ -145,8 +145,10 @@ public class PageObject {
      * @param locator locator que deve esperar ficar presente
      * @param message mensagem de espera
      */
-    protected void waitWindow(final String locator, final String message) {
+    protected boolean waitWindow(final String locator, final String message) {
         WaitWindow waitWindow = null;
+        final long timeIni = System.currentTimeMillis();
+        boolean sinalizouErro = false;;
         for(;;) {
             final boolean elementPresent = isElementPresentIgnoreUnhandledAlertException(locator);
             if (elementPresent) {
@@ -155,12 +157,21 @@ public class PageObject {
             } else {
                 if (waitWindow == null) {
                     waitWindow = new WaitWindow(message);
+                } else {
+                    if (waitWindow.isSinalizouErro()) {
+                        sinalizouErro = true;
+                        break;
+                    }
+                    if (System.currentTimeMillis() -  timeIni > 10000) {
+                        waitWindow.habilitarSinalizacaoErro();
+                    }
                 }
             }
         }
         if (waitWindow != null) {
             waitWindow.dispose();
         }
+        return sinalizouErro;
     }
 
     private void clearAlertsIgnoreUnhandledAlertException() {
