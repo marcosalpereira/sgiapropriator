@@ -7,7 +7,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -33,9 +36,12 @@ public class WaitWindow extends JDialog {
     private JLabel lblMensagem;
 
     private final String message;
+    private JButton btnSinalizarErro;
+
+    private boolean sinalizouErro;
 
     public static void main(String[] args) {
-        new WaitWindow("Esperando pelo login do usuário");
+        new WaitWindow("Esperando pelo login do usuário").habilitarSinalizacaoErro();
     }
 
     public WaitWindow(String message) {
@@ -76,10 +82,25 @@ public class WaitWindow extends JDialog {
             this.lblMensagem.setIconTextGap(0);
             this.lblMensagem.setVerticalTextPosition(SwingConstants.TOP);
         }
+        {
+        	btnSinalizarErro = new JButton();
+        	jPanel.add(btnSinalizarErro, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 5, 0), 0, 0));
+        	btnSinalizarErro.setText("Sinalizar Erro");
+        	btnSinalizarErro.addActionListener(new ActionListener() {
+        		public void actionPerformed(ActionEvent evt) {
+        			btnSinalizarErroActionPerformed(evt);
+        		}
+        	});
+        	btnSinalizarErro.setVisible(false);
+        }
         this.setUndecorated(true);
         this.setSize(707, 100);
         AWTUtilitiesWrapper.setOpacity(this);
         centerMe();
+    }
+
+    public void habilitarSinalizacaoErro() {
+        this.btnSinalizarErro.setVisible(true);
     }
 
     private void centerMe() {
@@ -88,6 +109,14 @@ public class WaitWindow extends JDialog {
         final int screenWidth = screenSize.width;
 
         this.setLocation(screenWidth / 2 - this.getWidth() / 2, 30);
+    }
+
+    private void btnSinalizarErroActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
+    	this.sinalizouErro = true;
+    }
+
+    public boolean isSinalizouErro() {
+        return sinalizouErro;
     }
 
 }
