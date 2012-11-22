@@ -121,7 +121,6 @@ public class ProgressInfo extends JFrame {
             	{
             		lblMessage = new JTextField();
             		jPanel1.add(lblMessage, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 0, 0), 0, 0));
-            		lblMessage.setText(title);
             		lblMessage.setEditable(false);
             		lblMessage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
             		lblMessage.setOpaque(true);
@@ -130,6 +129,8 @@ public class ProgressInfo extends JFrame {
             		lblMessage.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
             		lblMessage.setSize(679, 22);
             		lblMessage.setVisible(false);
+            		lblMessage.setForeground(new java.awt.Color(255,0,0));
+            		lblMessage.setFont(new java.awt.Font("Dialog",1,12));
             	}
             }
 

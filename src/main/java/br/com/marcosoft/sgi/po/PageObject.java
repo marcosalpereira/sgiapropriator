@@ -1,13 +1,9 @@
 package br.com.marcosoft.sgi.po;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.openqa.selenium.By;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 
+import br.com.marcosoft.sgi.ErroInesperadoSgi;
 import br.com.marcosoft.sgi.WaitWindow;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 
@@ -93,6 +89,9 @@ public class PageObject {
                     return;
                 }
             } catch (final SeleniumException e) {
+                if (isErroInesperadoSgi()) {
+                    throw new ErroInesperadoSgi();
+                }
                 System.out.println(e);
             }
             sleep(1000);
@@ -117,9 +116,26 @@ public class PageObject {
 
     protected void type(String locator, String value) {
         if (value != null) {
-            getSelenium().type(locator, value);
+            try {
+                getSelenium().type(locator, value);
+            } catch (final SeleniumException e) {
+                if (isErroInesperadoSgi()) {
+                    throw new ErroInesperadoSgi();
+                }
+            }
         }
     }
+
+    protected void click(String locator) {
+        try {
+            getSelenium().click(locator);
+        } catch (final SeleniumException e) {
+            if (isErroInesperadoSgi()) {
+                throw new ErroInesperadoSgi();
+            }
+        }
+     }
+
 
     /**
      * Limpar qualquer alerta que foi mostrado.
@@ -145,10 +161,8 @@ public class PageObject {
      * @param locator locator que deve esperar ficar presente
      * @param message mensagem de espera
      */
-    protected boolean waitWindow(final String locator, final String message) {
+    protected void waitWindow(final String locator, final String message) {
         WaitWindow waitWindow = null;
-        final long timeIni = System.currentTimeMillis();
-        boolean sinalizouErro = false;;
         for(;;) {
             final boolean elementPresent = isElementPresentIgnoreUnhandledAlertException(locator);
             if (elementPresent) {
@@ -157,21 +171,26 @@ public class PageObject {
             } else {
                 if (waitWindow == null) {
                     waitWindow = new WaitWindow(message);
-                } else {
-                    if (waitWindow.isSinalizouErro()) {
-                        sinalizouErro = true;
-                        break;
-                    }
-                    if (System.currentTimeMillis() -  timeIni > 10000) {
-                        waitWindow.habilitarSinalizacaoErro();
-                    }
                 }
+            }
+
+            if (isErroInesperadoSgi()) {
+                waitWindow.dispose();
+                throw new ErroInesperadoSgi();
             }
         }
         if (waitWindow != null) {
             waitWindow.dispose();
         }
-        return sinalizouErro;
+    }
+
+    public boolean isErroInesperadoSgi() {
+        try {
+        return getSelenium().isTextPresent(
+            "An unhandled exception was generated during the execution of the current web request");
+        } catch (final SeleniumException e) {
+            return false;
+        }
     }
 
     private void clearAlertsIgnoreUnhandledAlertException() {
@@ -202,22 +221,24 @@ public class PageObject {
 
     }
 
-    protected List<List<String>> getTable(String tableId) {
-        final List<List<String>> table = new ArrayList<List<String>>();
-        if (!getSelenium().isElementPresent(tableId)) {
-            return table;
-        }
-        final WebElement tableElement = getWebDriver().findElement(By.id(tableId));
-        final List<WebElement> rowsElements = tableElement.findElements(By.tagName("tr"));
-        for (final WebElement rowElement : rowsElements) {
-            final List<String> columns = new ArrayList<String>();
-            final List<WebElement> columnsElements = rowElement.findElements(By.tagName("td"));
-            for (final WebElement columnElement : columnsElements) {
-                columns.add(columnElement.getText());
-            }
-            table.add(columns);
-        }
-        return table;
+    /**
+     * Obtem o texto de uma celula de uma tabela.
+     * @param tableCellAddress endereco da celula na tabela
+     * @return o texto.
+     */
+    protected String getTable(String tableCellAddress) {
+        return getSelenium().getTable(tableCellAddress);
+    }
+
+    /**
+     * Gera um localizador para a celula da tabela especificada.
+     * @param idTabela id da tabela
+     * @param linha numero da linha
+     * @param coluna numero da coluna
+     * @return localizador
+     */
+    protected String gerarLocalizadorTabela(final String idTabela, int linha, int coluna) {
+        return String.format("%s.%d.%d", idTabela, linha, coluna);
     }
 
 

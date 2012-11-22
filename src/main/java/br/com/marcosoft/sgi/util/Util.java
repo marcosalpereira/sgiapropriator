@@ -1,5 +1,6 @@
 package br.com.marcosoft.sgi.util;
 
+import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -7,8 +8,21 @@ import java.util.Date;
 
 public class Util {
 
-    public static final SimpleDateFormat DD_MM_YYYY_FORMAT = new SimpleDateFormat(
-        "dd/MM/yyyy");
+    /**
+     * DD_MM_YYYY Date formatter não "Lenient".
+     */
+    public static final DateFormat DD_MM_YYYY_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+    static {
+        DD_MM_YYYY_FORMAT.setLenient(false);
+    }
+
+    /**
+     * DD_MM_YY Date formatter não "Lenient".
+     */
+    public static final DateFormat DD_MM_YY_FORMAT = new SimpleDateFormat("dd/MM/yy");
+    static {
+        DD_MM_YY_FORMAT.setLenient(false);
+    }
 
     public static String formatDate(Date data) {
         final String[] weekDays = {"Domingo", "Segunda", "Terça", "Quarta", "Quinta",
@@ -21,13 +35,11 @@ public class Util {
         return DD_MM_YYYY_FORMAT.format(data) + " " + weekDay;
     }
 
-    public static Date parseDate(String pattern, String value)
+    public static Date parseDate(DateFormat dateFormat, String value)
         throws IllegalArgumentException {
         if (value != null && !value.equals("") && !value.equals("-")) {
-            final SimpleDateFormat formatter = new SimpleDateFormat(pattern);
-            formatter.setLenient(false);
             final ParsePosition pos = new ParsePosition(0);
-            final Date date = formatter.parse(value, pos);
+            final Date date = dateFormat.parse(value, pos);
             if (date != null && pos.getIndex() == value.length()) {
                 return date;
             }

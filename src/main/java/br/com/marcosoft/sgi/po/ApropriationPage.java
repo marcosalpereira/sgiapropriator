@@ -96,25 +96,9 @@ public class ApropriationPage extends PageObject {
             type(AP_OBS, task.getDescricao());
         }
 
-        getSelenium().click(BTN_INCLUIR);
+        click(BTN_INCLUIR);
 
-        final boolean erroSgi = waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
-
-        if (erroSgi) {
-            final String message = "Parece que houve um problema no SGI! Deseja tentar novamente?";
-            final int reposta = showConfirmDialog(
-                null, message, "Erro na apropriação", YES_NO_OPTION, QUESTION_MESSAGE);
-            if (reposta == OK_OPTION) {
-                //TODO refatorar essa recuperaçao aqui
-                getSelenium().selectFrame("relative=top");
-                new HomePage()
-                    .gotoApropriationPage(apropriacaoSubordinado)
-                    .mostrarApropriacoesPeriodo();
-                apropriate(taskDailySummary, nomeSubordinado);
-            } else {
-                return;
-            }
-        }
+        waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
 
         if (!apropriou(data, minutes, task)) {
             final String message = "Não detectei que a apropriação foi realizada. Deseja ajustar e tentar novamente?" ;
@@ -131,34 +115,69 @@ public class ApropriationPage extends PageObject {
     }
 
     private boolean apropriou(Date data, String minutes, Task task) {
-        if ("sim".equals(System.getProperty(Config.SGI_NAO_VERIFICAR_APROPRIACAO))) {
+        final String verificarApropriacao =
+            System.getProperty(Config.SGI_VERIFICAR_FEZ_APROPRIACAO, "Sim");
+        if (!"Sim".equalsIgnoreCase(verificarApropriacao)) {
             return true;
         }
-        final List<List<String>> table = getTable("AP_listagemPessoaTarefa");
-        for (final List<String> linha : table) {
-            if (linhaContemApropriacaoTarefa(linha, data, minutes, task)) {
-                return true;
+
+        for (int linha = 1;; linha++) {
+            final Date dataApropriacao = getDataApropriada(linha);
+            if (dataApropriacao == null || dataApropriacao.before(data)) return false;
+            if (dataApropriacao.equals(data)) {
+                if (linhaContemApropriacaoTarefa(linha, minutes, task)) {
+                    return true;
+                }
             }
         }
-        return false;
+
     }
 
-    private boolean linhaContemApropriacaoTarefa(List<String> linha, Date data, String minutes, Task task) {
-        final String dataEsperada = Util.DD_MM_YYYY_FORMAT.format(data);
+
+    private Date getDataApropriada(int linha) {
+        final String cellAddress = gerarLocalizadorTabela("AP_listagemPessoaTarefa", linha, 0);
+        try {
+            final String dataApropriacao = getTable(cellAddress);
+            return Util.parseDate(Util.DD_MM_YYYY_FORMAT, dataApropriacao);
+        } catch (final RuntimeException e) {
+            return null;
+        }
+    }
+
+    private boolean linhaContemApropriacaoTarefa(int linha, String minutes, Task task) {
         final String projeto = task.getProjeto()
             .replaceAll("\\W", "").toLowerCase();
 
-        final String dataPagina = linha.get(0);
-        final String minutosPagina = linha.get(1);
-        final String ugPagina = linha.get(2);
-        final String projetoMacroPagina = linha.get(3);
+        final String minutosPagina = getMinutosApropriados(linha);
+        final String projetoMacroPagina = getProjetoMacroApropriados(linha);
         final String projetoPagina = separarProjetoDaMacroAtividade(projetoMacroPagina)
             .replaceAll("\\W", "").toLowerCase();
 
-        return dataEsperada.equals(dataPagina)
-            && minutes.equals(minutosPagina)
-            && task.getUgCliente().equals(ugPagina)
+        return minutes.equals(minutosPagina)
             && projeto.startsWith(projetoPagina);
+
+    }
+
+    /**
+     * @return o projeto e a macroatividade da tabela de apropriacoes realizadas.
+     * @param linha linha
+     */
+    private String getProjetoMacroApropriados(int linha) {
+        final String cellAddress = gerarLocalizadorTabela("AP_listagemPessoaTarefa", linha, 3);
+        try {
+            return getTable(cellAddress);
+        } catch (final RuntimeException e) {
+            return null;
+        }
+    }
+
+    private String getMinutosApropriados(int linha) {
+        final String cellAddress = gerarLocalizadorTabela("AP_listagemPessoaTarefa", linha, 1);
+        try {
+            return getTable(cellAddress);
+        } catch (final RuntimeException e) {
+            return null;
+        }
     }
 
     private String separarProjetoDaMacroAtividade(String projetoMacro) {
@@ -356,26 +375,28 @@ public class ApropriationPage extends PageObject {
         @Override
         public void run() {
             while (!stop) {
-                desabilitarBotoesIncluirCancelar();
+                desabilitarCamposNaoAjustaveis();
                 PageObject.sleep(1000);
             }
         }
 
         public void finalizar() {
             stop = true;
-            habilitarBotoesIncluirCancelar();
+            habilitarCamposNaoAjustaveis();
         }
 
     }
 
-    private void desabilitarBotoesIncluirCancelar() {
+    private void desabilitarCamposNaoAjustaveis() {
         setEnabled(BTN_INCLUIR, false);
         setEnabled(BTN_LIMPAR, false);
+        setEnabled(AP_HORAS, false);
     }
 
-    private void habilitarBotoesIncluirCancelar() {
+    private void habilitarCamposNaoAjustaveis() {
         setEnabled(BTN_INCLUIR, true);
         setEnabled(BTN_LIMPAR, true);
+        setEnabled(AP_HORAS, true);
     }
 
 }
