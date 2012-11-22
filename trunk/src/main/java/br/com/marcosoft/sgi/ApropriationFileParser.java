@@ -102,7 +102,7 @@ public class ApropriationFileParser {
         final int duracao = Integer.parseInt(fields[POS_REG_DURACAO]);
         if (duracao != 0) {
             final TaskRecord taskRecord = new TaskRecord();
-            taskRecord.setData(Util.parseDate("dd/MM/yy", fields[POS_REG_DATA]));
+            taskRecord.setData(Util.parseDate(Util.DD_MM_YY_FORMAT, fields[POS_REG_DATA]));
             taskRecord.setDuracao(duracao);
             taskRecord.setTask(parseTask(fields));
             ret.getTasksRecords().add(taskRecord);

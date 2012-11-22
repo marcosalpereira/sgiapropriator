@@ -5,6 +5,7 @@ package br.com.marcosoft.sgi.po;
 public class HomePage extends PageObject {
 
     public ApropriationPage gotoApropriationPage(boolean apropriacaoSubordinado) {
+        getSelenium().selectFrame("relative=top");
         getSelenium().selectFrame("menu");
         getSelenium().click("link=Apropriação");
         getSelenium().selectFrame("relative=top");

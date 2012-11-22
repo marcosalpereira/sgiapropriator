@@ -51,7 +51,7 @@ public class ApropriationFile {
 
         private static final String SGI_CPF = "sgi.cpf";
 
-        public static final String SGI_NAO_VERIFICAR_APROPRIACAO = "sgi.naoVerificarApropriacao";
+        public static final String SGI_VERIFICAR_FEZ_APROPRIACAO = "sgi.verificarFezApropriacao";
 
         public void setProperty(String key, String value) {
             if (key == null || key.trim().length() == 0)

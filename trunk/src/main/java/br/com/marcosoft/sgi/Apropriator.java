@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -46,6 +47,7 @@ import br.com.marcosoft.sgi.util.URLUtils;
 public class Apropriator {
 
     public static void main(final String[] args) {
+        setLookAndFeel();
         final File inputFile = parseArgs(args);
         if (inputFile == null) {
             JOptionPane.showMessageDialog(null, "Erro acessando arquivo importação!");
@@ -58,6 +60,14 @@ public class Apropriator {
                 apropriator.gravarArquivoRetornoErro(e, inputFile);
                 e.printStackTrace();
             }
+        }
+    }
+
+    private static void setLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -305,8 +315,7 @@ public class Apropriator {
         verifyDefaults(tasks);
 
         final HomePage homePage = doLogin();
-        final ApropriationPage apropriationPage = homePage.gotoApropriationPage(isApropriacaoSubordinado());
-        apropriationPage.mostrarApropriacoesPeriodo();
+        final ApropriationPage apropriationPage = irParaPaginaApropriacao(homePage);
 
         if (precisaAjustarInformacoesApropriacao(tasks)) {
             apropriationPage.ajustarApropriacoes(tasks);
@@ -320,26 +329,84 @@ public class Apropriator {
             progressInfo.setInfoMessage(getNewVersionMessage());
         }
 
-        int i = 0;
-
-        for (final TaskDailySummary tds : tasksSum) {
+        for (int i=1; i<=tasksSum.size();) {
             try {
-                final String progresso = (++i) + "/" + tasksSum.size();
+                final TaskDailySummary tds = tasksSum.get(i-1);
+                final String progresso = i + "/" + tasksSum.size();
                 progressInfo.setInfo(progresso, tds);
                 apropriationPage.apropriate(tds, getNomeSubordinado());
                 tds.setApropriado(true);
+                progressInfo.setInfoMessage(null);
+                i++;
+
+            } catch (final ErroInesperadoSgi e) {
+                progressInfo.setInfoMessage(
+                    "Erro no SGI Detectado. Tentando apropriar novamente mesma atividade!!!");
+                irParaPaginaApropriacao(homePage);
 
             } catch (final RuntimeException e) {
-                if (stopAfterException(e)) {
+                final OpcoesRecuperacaoAposErro opcao = stopAfterException(e);
+                if (opcao == OpcoesRecuperacaoAposErro.TENTAR_NOVAMENTE) {
+                    progressInfo.setInfoMessage("Tentando apropriar novamente mesma atividade!!!");
+                    irParaPaginaApropriacao(homePage);
+
+                } else if (opcao == OpcoesRecuperacaoAposErro.PROXIMA) {
+                    irParaPaginaApropriacao(homePage);
+                    i++;
+
+                } else {
                     break;
                 }
             }
+
         }
+
         homePage.logout();
 
         progressInfo.dispose();
 
         gravarArquivoRetornoApropriacao(tasksSum);
+    }
+
+    private ApropriationPage irParaPaginaApropriacao(final HomePage homePage) {
+        final ApropriationPage apropriationPage = homePage.gotoApropriationPage(isApropriacaoSubordinado());
+        apropriationPage.mostrarApropriacoesPeriodo();
+        return apropriationPage;
+    }
+
+    private enum OpcoesRecuperacaoAposErro {
+        TENTAR_NOVAMENTE, PROXIMA, TERMINAR;
+
+        @Override
+        public String toString() {
+            switch (this) {
+            case TENTAR_NOVAMENTE:
+                return "Tentar Novamente";
+            case PROXIMA:
+                return "Ir para a próxima";
+            default:
+                return "Terminar";
+            }
+        }
+    }
+
+    private OpcoesRecuperacaoAposErro stopAfterException(final RuntimeException e) {
+        final String message = "O seguinte erro ocorreu:" + e.getMessage() + "!";
+
+        final Object[] options = {"Tentar Novamente",
+                            "Ir para próxima",
+                            "Terminar"};
+        final int n = JOptionPane.showOptionDialog(null,
+            message,
+            "Erro na apropriação",
+            JOptionPane.YES_NO_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]);
+
+        return OpcoesRecuperacaoAposErro.values()[n];
+
     }
 
     private String getMacrosVersion() {
@@ -352,13 +419,6 @@ public class Apropriator {
 
     private boolean isApropriacaoSubordinado() {
         return StringUtils.isNotEmpty(getNomeSubordinado());
-    }
-
-    private boolean stopAfterException(final RuntimeException e) {
-        final String message = "O seguinte erro ocorreu:" + e.getMessage() + "\n\nContinua?";
-        final int opt = JOptionPane.showConfirmDialog(null, message,
-            "Erro na apropriação", JOptionPane.YES_NO_OPTION);
-        return opt != JOptionPane.OK_OPTION;
     }
 
     private HomePage doLogin() {
