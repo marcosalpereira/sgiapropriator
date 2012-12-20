@@ -101,7 +101,8 @@ public class ApropriationPage extends PageObject {
         waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
 
         if (!apropriou(data, minutes, task)) {
-            final String message = "Não detectei que a apropriação foi realizada. Deseja ajustar e tentar novamente?" ;
+            final String message =
+                "Parece que a apropriação NÃO foi realizada corretamente. Deseja ajustar e tentar novamente?" ;
             final int reposta = showConfirmDialog(
                 null, message, "Erro na apropriação", YES_NO_OPTION, QUESTION_MESSAGE);
             if (reposta == OK_OPTION) {

@@ -53,6 +53,8 @@ public class ApropriationFile {
 
         public static final String SGI_VERIFICAR_FEZ_APROPRIACAO = "sgi.verificarFezApropriacao";
 
+        public static final String SGI_SALVAR_SENHA = "sgi.salvar.senha";
+
         public void setProperty(String key, String value) {
             if (key == null || key.trim().length() == 0)
                 return;
@@ -126,6 +128,11 @@ public class ApropriationFile {
                 return string;
             }
             return string.substring(lastPos + 1);
+        }
+
+        public boolean isSalvarSenha() {
+            return "Sim".equalsIgnoreCase(
+                System.getProperty(SGI_SALVAR_SENHA, "Sim"));
         }
 
         public String getDefaultTipoHora() {

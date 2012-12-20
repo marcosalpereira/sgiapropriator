@@ -206,7 +206,7 @@ public class PageObject {
         }
     }
 
-    private boolean isElementPresentIgnoreUnhandledAlertException(String locator) {
+    protected boolean isElementPresentIgnoreUnhandledAlertException(String locator) {
         try {
             return getSelenium().isElementPresent(locator);
         } catch (final SeleniumException e) {
