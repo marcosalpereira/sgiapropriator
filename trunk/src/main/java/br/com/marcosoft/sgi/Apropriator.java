@@ -39,12 +39,15 @@ import br.com.marcosoft.sgi.po.LoginPage;
 import br.com.marcosoft.sgi.po.Sgi;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.ApplicationProperties;
+import br.com.marcosoft.sgi.util.Cipher;
 import br.com.marcosoft.sgi.util.URLUtils;
 
 /**
  * Apropriar SGI.
  */
 public class Apropriator {
+
+    private static final String CHAVE_SENHA_APP_PROPERTIES = "password";
 
     public static void main(final String[] args) {
         setLookAndFeel();
@@ -425,9 +428,26 @@ public class Apropriator {
         final Sgi sgi = new Sgi();
         final LoginPage loginPage = sgi.gotoLoginPage();
         final String cpf = this.apropriationFile.getConfig().getCpf();
-        final String pwd = this.applicantionProperties.getProperty("pwd");
+        final String pwd = readSavedPassword();
         final HomePage homePage = loginPage.login(cpf, pwd);
+        writeSavedPassword(pwd, homePage.getSenha());
         return homePage;
+    }
+
+    private void writeSavedPassword(String pwd, String senhaLida) {
+        if (senhaLida != null && !senhaLida.equals(pwd)) {
+            this.applicantionProperties.setProperty(CHAVE_SENHA_APP_PROPERTIES, Cipher.cript(senhaLida));
+        }
+    }
+
+    private String readSavedPassword() {
+        final String pwdCripto = this.applicantionProperties.getProperty(CHAVE_SENHA_APP_PROPERTIES);
+        if (pwdCripto != null) {
+            return Cipher.uncript(pwdCripto);
+        }
+
+        final String pwd = this.applicantionProperties.getProperty("pwd");
+        return pwd;
     }
 
     private boolean precisaAjustarInformacoesApropriacao(final List<TaskRecord> tasks) {
