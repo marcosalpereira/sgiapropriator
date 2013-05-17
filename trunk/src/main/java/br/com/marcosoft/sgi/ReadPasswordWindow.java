@@ -35,7 +35,7 @@ public class ReadPasswordWindow extends JDialog {
         final String info = String.format("Essa versão, por default, se oferece para salvar a senha. " +
             "\nSe não quiser que a senha seja salva localmente. Use o botão 'Cancelar' agora e " +
             "\ncoloque na aba 'Config' da planilha o valor 'Não' para opção '%s'" +
-            "\nOBS:A senha é salva criptografada.", Config.SGI_SALVAR_SENHA);
+            "\nOBS:A senha é salva criptografada.", Config.SALVAR_SENHA);
         final ReadPasswordWindow c = new ReadPasswordWindow(
             "Informe a nova senha", info);
         System.out.println(c.getPassword());

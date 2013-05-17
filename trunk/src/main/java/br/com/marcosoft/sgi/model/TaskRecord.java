@@ -37,5 +37,9 @@ public class TaskRecord {
         this.duracao = duracao;
     }
 
+    public String getSistema() {
+        return task.getSistema();
+    }
+
 
 }

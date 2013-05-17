@@ -105,7 +105,7 @@ public class ApropriationFileParser {
             taskRecord.setData(Util.parseDate(Util.DD_MM_YY_FORMAT, fields[POS_REG_DATA]));
             taskRecord.setDuracao(duracao);
             taskRecord.setTask(parseTask(fields));
-            ret.getTasksRecords().add(taskRecord);
+            ret.adicionarTasksRecord(taskRecord);
         }
     }
 
@@ -152,6 +152,7 @@ public class ApropriationFileParser {
     private Task parseTask(final String[] fields) {
         final Task task = new Task();
         task.setAjustarInformacoes("Sim".equals(fields[POS_REG_AJUSTAR_INFORMACOES]));
+        task.setSistema(fields[POS_REG_AJUSTAR_INFORMACOES]);
         task.setNumeroLinha(fields[POS_REG_NUMERO_LINHA]);
         task.setUgCliente(fields[POS_REG_UG_CLIENTE]);
         task.setLotacaoSuperior(!"Não".equals(fields[POS_REG_LOTACAO_SUPERIOR]));

@@ -1,6 +1,7 @@
 package br.com.marcosoft.sgi;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -19,6 +20,7 @@ import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 
 import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
+import br.com.marcosoft.sgi.util.MoveMouseListener;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -93,6 +95,12 @@ public class WaitWindow extends JDialog {
         	});
         	btnSinalizarErro.setVisible(false);
         }
+
+        final MoveMouseListener mml = new MoveMouseListener(jPanel);
+        jPanel.addMouseListener(mml);
+        jPanel.addMouseMotionListener(mml);
+        jPanel.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+
         this.setUndecorated(true);
         this.setSize(707, 100);
         AWTUtilitiesWrapper.setOpacity(this);
