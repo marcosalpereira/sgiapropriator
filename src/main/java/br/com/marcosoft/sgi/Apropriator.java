@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -37,6 +38,10 @@ import br.com.marcosoft.sgi.po.ApropriationPage;
 import br.com.marcosoft.sgi.po.HomePage;
 import br.com.marcosoft.sgi.po.LoginPage;
 import br.com.marcosoft.sgi.po.Sgi;
+import br.com.marcosoft.sgi.po.alm.Alm;
+import br.com.marcosoft.sgi.po.alm.ApropriationPageAlm;
+import br.com.marcosoft.sgi.po.alm.HomePageAlm;
+import br.com.marcosoft.sgi.po.alm.LoginPageAlm;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.ApplicationProperties;
 import br.com.marcosoft.sgi.util.Cipher;
@@ -48,6 +53,7 @@ import br.com.marcosoft.sgi.util.URLUtils;
 public class Apropriator {
 
     private static final String CHAVE_SENHA_APP_PROPERTIES = "password";
+    private static final String CHAVE_SENHA_ALM_APP_PROPERTIES = "alm.password";
 
     public static void main(final String[] args) {
         setLookAndFeel();
@@ -137,15 +143,12 @@ public class Apropriator {
 
         parseFile(inputFile);
         verificarCompatibilidade();
-        iniciarSelenium(apropriationFile.getConfig());
 
         if (apropriationFile.isCaptureProjects()) {
             captureProjects();
         } else {
             apropriate();
         }
-
-        SeleniumSupport.stopSelenium();
 
     }
 
@@ -158,10 +161,10 @@ public class Apropriator {
         }
     }
 
-    private void iniciarSelenium(Config config) {
+    private void iniciarSelenium(Config config, String browserUrl) {
         final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
         try {
-            SeleniumSupport.initSelenium(config);
+            SeleniumSupport.initSelenium(config, browserUrl);
         } finally {
             waitWindow.dispose();
         }
@@ -220,7 +223,8 @@ public class Apropriator {
                     sb.append(";");
                 }
                 sb.append(
-                    String.format("%s", aspas(projeto.getNomeProjeto())));
+                    String.format("%s", aspas(
+                        projeto.getNomeProjeto() + ";" + projeto.getUg())));
             }
             out.print("prj|");
             out.println(sb.toString());
@@ -296,6 +300,10 @@ public class Apropriator {
     }
 
     private void captureProjects() {
+        final Config config = apropriationFile.getConfig();
+
+        iniciarSelenium(config, config.getUrlSgi());
+
         final HomePage homePage = doLogin();
         final ApropriationPage apropriationPage =
             homePage.gotoApropriationPage(isApropriacaoSubordinado());
@@ -311,10 +319,73 @@ public class Apropriator {
 
         gravarArquivoRetornoProjetos(projetos);
 
+        SeleniumSupport.stopSelenium();
     }
 
     private void apropriate() {
-        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
+        final List<TaskDailySummary> tasksSum = new ArrayList<TaskDailySummary>();
+        tasksSum.addAll(apropriateSgi());
+        tasksSum.addAll(apropriateAlm());
+        gravarArquivoRetornoApropriacao(tasksSum);
+    }
+
+    private List<TaskDailySummary> apropriateAlm() {
+        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords("ALM");
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final HomePageAlm homePage = doAlmLogin();
+
+        final List<TaskDailySummary> tasksSum = sumTasks(tasks);
+
+        final String title = "Apropriator v" + getAppVersion() + " - Macros" + getMacrosVersion();
+        final ProgressInfo progressInfo = new ProgressInfo(title);
+        if (isNewVersion()) {
+            progressInfo.setInfoMessage(getNewVersionMessage());
+        }
+
+        for (int i=1; i<=tasksSum.size();) {
+            final TaskDailySummary tds = tasksSum.get(i-1);
+            final String progresso = i + "/" + tasksSum.size();
+            progressInfo.setInfo(progresso, tds);
+            final ApropriationPageAlm apropriationPage = homePage.gotoApropriationPage(tds);
+            try {
+                apropriationPage.apropriate(tds);
+                tds.setApropriado(true);
+                progressInfo.setInfoMessage(null);
+                i++;
+
+            } catch (final RuntimeException e) {
+                final OpcoesRecuperacaoAposErro opcao = stopAfterException(e);
+                if (opcao == OpcoesRecuperacaoAposErro.TENTAR_NOVAMENTE) {
+                    progressInfo.setInfoMessage("Tentando apropriar novamente mesma atividade!!!");
+                    homePage.gotoApropriationPage(tds);
+
+                } else if (opcao == OpcoesRecuperacaoAposErro.PROXIMA) {
+                    homePage.gotoApropriationPage(tds);
+                    i++;
+
+                } else {
+                    break;
+                }
+            }
+
+        }
+
+        homePage.logout();
+
+        progressInfo.dispose();
+
+        return tasksSum;
+    }
+
+    private List<TaskDailySummary> apropriateSgi() {
+        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords("SGI");
+        if (tasks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         verifyDefaults(tasks);
 
         final HomePage homePage = doLogin();
@@ -368,7 +439,7 @@ public class Apropriator {
 
         progressInfo.dispose();
 
-        gravarArquivoRetornoApropriacao(tasksSum);
+        return tasksSum;
     }
 
     private ApropriationPage irParaPaginaApropriacao(final HomePage homePage) {
@@ -424,6 +495,16 @@ public class Apropriator {
         return StringUtils.isNotEmpty(getNomeSubordinado());
     }
 
+    private HomePageAlm doAlmLogin() {
+        final Alm alm = new Alm();
+        final LoginPageAlm loginPage = alm.gotoLoginPage();
+        final String cpf = this.apropriationFile.getConfig().getCpf();
+        final String pwd = readAlmSavedPassword();
+        final HomePageAlm homePage = loginPage.login(cpf, pwd);
+        writeAlmSavedPassword(pwd, homePage.getSenha());
+        return homePage;
+    }
+
     private HomePage doLogin() {
         final Sgi sgi = new Sgi();
         final LoginPage loginPage = sgi.gotoLoginPage();
@@ -438,6 +519,22 @@ public class Apropriator {
         if (senhaLida != null && !senhaLida.equals(pwd)) {
             this.applicantionProperties.setProperty(CHAVE_SENHA_APP_PROPERTIES, Cipher.cript(senhaLida));
         }
+    }
+
+    private void writeAlmSavedPassword(String pwd, String senhaLida) {
+        if (senhaLida != null && !senhaLida.equals(pwd)) {
+            this.applicantionProperties.setProperty(CHAVE_SENHA_ALM_APP_PROPERTIES,
+                Cipher.cript(senhaLida));
+        }
+    }
+
+    private String readAlmSavedPassword() {
+        final String pwdCripto = this.applicantionProperties.getProperty(
+            CHAVE_SENHA_ALM_APP_PROPERTIES);
+        if (pwdCripto != null) {
+            return Cipher.uncript(pwdCripto);
+        }
+        return null;
     }
 
     private String readSavedPassword() {
@@ -521,6 +618,8 @@ public class Apropriator {
         for (final TaskRecord tr : tasks) {
             final Task task = tr.getTask();
 
+            ajustarUgLotacaoSuperior(task);
+
             if (task.getTipoHora().length() == 0) {
                 task.setTipoHora(defaultTipoHora);
             }
@@ -535,6 +634,14 @@ public class Apropriator {
                 }
             }
         }
+    }
+
+    private void ajustarUgLotacaoSuperior(final Task task) {
+        final String[] split = task.getProjeto().split(";");
+        if (split.length > 1) {
+            task.setUgCliente(split[1]);
+        }
+        task.setLotacaoSuperior(true);
     }
 
 }

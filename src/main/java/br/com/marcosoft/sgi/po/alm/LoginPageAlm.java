@@ -1,20 +1,21 @@
-package br.com.marcosoft.sgi.po;
+package br.com.marcosoft.sgi.po.alm;
 
 import br.com.marcosoft.sgi.ReadPasswordWindow;
 import br.com.marcosoft.sgi.model.ApropriationFile.Config;
+import br.com.marcosoft.sgi.po.PageObject;
 
 
-public class LoginPage extends PageObject {
+public class LoginPageAlm extends PageObject {
 
-    public HomePage login(String cpf, String pwd) {
+    public HomePageAlm login(String cpf, String pwd) {
         final String password = determinarPassword(pwd);
 
-        type("tbUserId", cpf);
+        type("jazz_app_internal_LoginWidget_0_userId", cpf);
         if (cpf != null && password != null) {
-            getSelenium().type("tbSenha", password);
-            clickAndWait("btnAvancar");
+            getSelenium().type("jazz_app_internal_LoginWidget_0_password", password);
+            clickAndWait("css=button[type='submit']");
 
-            if (pwd != null && !isElementPresentIgnoreUnhandledAlertException("menulist")) {
+            if (pwd != null && !isElementPresentIgnoreUnhandledAlertException("jazz_app_internal_LoginLogoutArea_0")) {
                 final ReadPasswordWindow passwordWindow = new ReadPasswordWindow(
                     "Informe a nova senha",
                     "Não consegui me logar usando a senha atualmente salva." +
@@ -24,7 +25,7 @@ public class LoginPage extends PageObject {
         }
 
         waitWindow("menulist", "Esperando pelo login do usuário");
-        return new HomePage(password);
+        return new HomePageAlm(password);
     }
 
     private String determinarPassword(String pwd) {

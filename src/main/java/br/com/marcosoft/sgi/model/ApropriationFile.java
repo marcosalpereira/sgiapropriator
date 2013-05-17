@@ -20,8 +20,14 @@ public class ApropriationFile {
         this.inputFile = inputFile;
     }
 
-    public List<TaskRecord> getTasksRecords() {
-        return tasksRecords;
+    public List<TaskRecord> getTasksRecords(String sistema) {
+        final List<TaskRecord> tasksRecordsSistema = new ArrayList<TaskRecord>();
+        for (final TaskRecord taskRecord : tasksRecords) {
+            if (sistema.equals(taskRecord.getSistema())) {
+                tasksRecordsSistema.add(taskRecord);
+            }
+        }
+        return tasksRecordsSistema;
     }
 
     public void setTasksRecords(List<TaskRecord> tasksRecords) {
@@ -53,7 +59,7 @@ public class ApropriationFile {
 
         public static final String SGI_VERIFICAR_FEZ_APROPRIACAO = "sgi.verificarFezApropriacao";
 
-        public static final String SGI_SALVAR_SENHA = "sgi.salvar.senha";
+        public static final String SALVAR_SENHA = "salvar.senha";
 
         public void setProperty(String key, String value) {
             if (key == null || key.trim().length() == 0)
@@ -130,11 +136,6 @@ public class ApropriationFile {
             return string.substring(lastPos + 1);
         }
 
-        public boolean isSalvarSenha() {
-            return "Sim".equalsIgnoreCase(
-                System.getProperty(SGI_SALVAR_SENHA, "Sim"));
-        }
-
         public String getDefaultTipoHora() {
             return System.getProperty(SGI_DEFAULT_TIPO_HORA, "Normal");
         }
@@ -168,6 +169,10 @@ public class ApropriationFile {
 
     public boolean isCaptureProjects() {
         return captureProjects;
+    }
+
+    public void adicionarTasksRecord(TaskRecord taskRecord) {
+        tasksRecords.add(taskRecord);
     }
 
 }

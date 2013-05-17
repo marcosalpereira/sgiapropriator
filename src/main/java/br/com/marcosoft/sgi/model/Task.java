@@ -28,6 +28,8 @@ public class Task {
 
     private String horaTermino;
 
+    private String sistema;
+
     private boolean ajustarInformacoes;
 
     public boolean isAjustarInformacoes() {
@@ -40,6 +42,14 @@ public class Task {
 
     public void setAjustarInformacoes(final boolean ajustarInformacoes) {
         this.ajustarInformacoes = ajustarInformacoes;
+    }
+
+    public String getSistema() {
+        return sistema;
+    }
+
+    public void setSistema(String sistema) {
+        this.sistema = sistema;
     }
 
     /**

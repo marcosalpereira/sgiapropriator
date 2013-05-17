@@ -34,9 +34,8 @@ public class SeleniumSupport {
     /**
      * Inicializa o Selenium.
      */
-    public static void initSelenium(Config config) {
+    public static void initSelenium(Config config, String browserUrl) {
         webDriver = getDriver(config);
-        final String browserUrl = config.getUrlSgi();
         selenium = new WebDriverBackedSelenium(webDriver, browserUrl);
     }
 
