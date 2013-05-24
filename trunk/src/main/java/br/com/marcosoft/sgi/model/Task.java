@@ -246,5 +246,15 @@ public class Task {
         return this.descricaoMudou;
     }
 
+    public String getProjetoAlm() {
+        final String[] split = projeto.split(";");
+        return split[0];
+    }
+
+    public String getIdItemTrabalho() {
+        final String[] split = projeto.split(";");
+        return split[1];
+    }
+
 
 }

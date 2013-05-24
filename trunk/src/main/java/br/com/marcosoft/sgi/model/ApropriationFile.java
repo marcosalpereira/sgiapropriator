@@ -45,6 +45,8 @@ public class ApropriationFile {
 
         private static final String SGI_URL = "sgi.url";
 
+        private static final String ALM_URL = "alm.url";
+
         private static final String SGI_SUBORDINADO = "sgi.subordinado";
 
         private static final String SGI_DEFAULT_TIPO_INSUMO = "sgi.defaultTipoInsumo";
@@ -100,6 +102,10 @@ public class ApropriationFile {
 
         public String getUrlSgi() {
             return System.getProperty(SGI_URL, "https://sgi.portalcorporativo.serpro/");
+        }
+
+        public String getUrlAlm() {
+            return System.getProperty(ALM_URL, "https://alm.serpro/");
         }
 
         public String getBrowserType() {

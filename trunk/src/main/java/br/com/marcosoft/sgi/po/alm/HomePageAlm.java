@@ -18,19 +18,14 @@ public class HomePageAlm extends PageObject {
 
     public ApropriationPageAlm gotoApropriationPage(TaskDailySummary tds) {
         final Task task = tds.getFirstTask();
-        final String url = String.format(
-        		"https://alm.serpro/ccm/web/projects/%s" +
-        		"#action=com.ibm.team.workitem.viewWorkItem&id=%s" +
-        		"&tab=rastreamentodehoras", task.getProjeto());
+        final String url = montarUrlRastreamentoHorasAlm(task.getProjetoAlm(), task.getIdItemTrabalho());
         getSelenium().open(url);
         return new ApropriationPageAlm();
     }
 
+
     public LoginPageAlm logout() {
-        getSelenium().selectFrame("relative=top");
-        getSelenium().selectFrame("menu");
-        getSelenium().click("link=Sair");
-        getSelenium().waitForPageToLoad("30000");
+        //NOP
         return new LoginPageAlm();
     }
 }

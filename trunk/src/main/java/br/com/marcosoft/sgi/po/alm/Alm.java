@@ -6,7 +6,7 @@ import br.com.marcosoft.sgi.po.PageObject;
 public class Alm extends PageObject {
 
     public LoginPageAlm gotoLoginPage() {
-        getSelenium().open("/Default.aspx");
+        getSelenium().open("/");
         return new LoginPageAlm();
     }
 }
