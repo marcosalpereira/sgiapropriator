@@ -1,12 +1,17 @@
 package br.com.marcosoft.sgi.util;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 public class Util {
+
+    public static final NumberFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
+    public static final DateFormat YYYY_MM_DD_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     /**
      * DD_MM_YYYY Date formatter não "Lenient".
@@ -48,10 +53,25 @@ public class Util {
         return null;
     }
 
+    public static Calendar parseCalendar(DateFormat dateFormat, String value) {
+        final Date date = parseDate(dateFormat, value);
+        return toCalendar(date);
+
+    }
+    public static Calendar toCalendar(Date date) {
+        final Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        return c;
+    }
+
     public static String formatMinutes(int minutes) {
         final int hor = minutes / 60;
         final int min = minutes - hor * 60;
         return String.format("%02d:%02d", hor, min);
+    }
+
+    public static String formatMinutesDecimal(double novoValor) {
+        return DECIMAL_FORMAT.format(novoValor);
     }
 
     public static void sleep(long millis) {
@@ -75,5 +95,20 @@ public class Util {
         }
         return false;
     }
+
+    public static int getWeekDay(Date data) {
+        final Calendar c = Calendar.getInstance();
+        c.setTime(data);
+        return c.get(Calendar.DAY_OF_WEEK);
+    }
+
+    public static double parseDouble(String str, double errorValue) {
+        try {
+            return Double.parseDouble(str);
+        } catch (final NumberFormatException e) {
+            return errorValue;
+        }
+    }
+
 
 }

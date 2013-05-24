@@ -335,6 +335,9 @@ public class Apropriator {
             return Collections.emptyList();
         }
 
+        final Config config = apropriationFile.getConfig();
+        iniciarSelenium(config, config.getUrlAlm());
+
         final HomePageAlm homePage = doAlmLogin();
 
         final List<TaskDailySummary> tasksSum = sumTasks(tasks);
@@ -377,6 +380,8 @@ public class Apropriator {
 
         progressInfo.dispose();
 
+        SeleniumSupport.stopSelenium();
+
         return tasksSum;
     }
 
@@ -387,6 +392,9 @@ public class Apropriator {
         }
 
         verifyDefaults(tasks);
+
+        final Config config = apropriationFile.getConfig();
+        iniciarSelenium(config, config.getUrlSgi());
 
         final HomePage homePage = doLogin();
         final ApropriationPage apropriationPage = irParaPaginaApropriacao(homePage);
@@ -438,6 +446,8 @@ public class Apropriator {
         homePage.logout();
 
         progressInfo.dispose();
+
+        SeleniumSupport.stopSelenium();
 
         return tasksSum;
     }

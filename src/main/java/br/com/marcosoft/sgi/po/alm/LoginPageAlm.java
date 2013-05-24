@@ -8,6 +8,10 @@ import br.com.marcosoft.sgi.po.PageObject;
 public class LoginPageAlm extends PageObject {
 
     public HomePageAlm login(String cpf, String pwd) {
+        if (isElementPresentIgnoreUnhandledAlertException("jazz_app_internal_LoginLogoutArea_0")) {
+            return new HomePageAlm(pwd);
+        }
+
         final String password = determinarPassword(pwd);
 
         type("jazz_app_internal_LoginWidget_0_userId", cpf);
@@ -24,7 +28,7 @@ public class LoginPageAlm extends PageObject {
             }
         }
 
-        waitWindow("menulist", "Esperando pelo login do usuário");
+        waitWindow("jazz_app_internal_LoginLogoutArea_0", "Esperando pelo login do usuário");
         return new HomePageAlm(password);
     }
 

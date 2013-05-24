@@ -117,6 +117,7 @@ public class PageObject {
     protected void type(String locator, String value) {
         if (value != null) {
             try {
+                waitForElement(locator);
                 getSelenium().type(locator, value);
             } catch (final SeleniumException e) {
                 if (isErroInesperadoSgi()) {
@@ -136,6 +137,29 @@ public class PageObject {
         }
      }
 
+    /**
+     * Espera até que o elemento exista na página.
+     * @param timeOut time out em segundos
+     * @param locator localizador para o elemento
+     * @throws SeleniumException se nao encontrar o elemento
+     */
+    protected final void waitForElement(String locator, int timeOut) throws SeleniumException {
+        for (int second = 0; second < timeOut; second++) {
+            if (getSelenium().isElementPresent(locator)) {
+                return;
+            }
+            sleep(1000);
+        }
+        throw new SeleniumException("Elemento '" + locator + "' não encontrado");
+    }
+
+    /**
+     * Espera até que o elemento exista na página.
+     * @param locator localizador para o elemento
+     */
+    protected final void waitForElement(String locator) {
+        waitForElement(locator, TIME_OUT_SEGUNDOS);
+    }
 
     /**
      * Limpar qualquer alerta que foi mostrado.
@@ -218,8 +242,33 @@ public class PageObject {
             }
         }
         return false;
-
     }
+
+
+    /**
+     * Verifica se um elemento esta presente na pagina.
+     * @param locator locator
+     * @param segundos numero de segundos que espera para que o elemento esteja presente
+     * @return <code>true</code> se esta presente
+     */
+    protected boolean isElementPresent(String locator, int segundos) {
+        for (int i = 0; i < segundos; i++) {
+            if (getSelenium().isElementPresent(locator)) {
+                return true;
+            }
+            sleep(1000);
+        }
+        return false;
+    }
+    /**
+     * Verifica se um elemento esta presente na pagina.
+     * @param locator locator
+     * @return <code>true</code> se esta presente
+     */
+    protected boolean isElementPresent(String locator) {
+        return isElementPresent(locator, TIME_OUT_SEGUNDOS);
+    }
+
 
     /**
      * Obtem o texto de uma celula de uma tabela.
@@ -241,5 +290,24 @@ public class PageObject {
         return String.format("%s.%d.%d", idTabela, linha, coluna);
     }
 
+
+    protected String montarUrlRastreamentoHorasAlm(String projetoAlm, String idItemTrabalho) {
+        final String url = String.format(
+                "https://alm.serpro/ccm/web/projects/%s" +
+                "#action=com.ibm.team.workitem.viewWorkItem&id=%s" +
+                "&tab=rastreamentodehoras"
+                , projetoAlm
+                , idItemTrabalho);
+        return url;
+    }
+
+    protected String montarUrlVisaoGeralAlm(String projetoAlm, String idItemTrabalho) {
+        final String url = String.format(
+            "https://alm.serpro/ccm/web/projects/%s" +
+                "#action=com.ibm.team.workitem.viewWorkItem&id=%s"
+                , projetoAlm
+                , idItemTrabalho);
+        return url;
+    }
 
 }
