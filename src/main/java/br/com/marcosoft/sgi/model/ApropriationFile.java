@@ -20,10 +20,20 @@ public class ApropriationFile {
         this.inputFile = inputFile;
     }
 
-    public List<TaskRecord> getTasksRecords(String sistema) {
+    public List<TaskRecord> getSgiTasksRecords() {
         final List<TaskRecord> tasksRecordsSistema = new ArrayList<TaskRecord>();
         for (final TaskRecord taskRecord : tasksRecords) {
-            if (sistema.equals(taskRecord.getSistema())) {
+            if (taskRecord.isSistemaSgi()) {
+                tasksRecordsSistema.add(taskRecord);
+            }
+        }
+        return tasksRecordsSistema;
+    }
+
+    public List<TaskRecord> getAlmTasksRecords() {
+        final List<TaskRecord> tasksRecordsSistema = new ArrayList<TaskRecord>();
+        for (final TaskRecord taskRecord : tasksRecords) {
+            if (taskRecord.isSistemaAlm()) {
                 tasksRecordsSistema.add(taskRecord);
             }
         }
