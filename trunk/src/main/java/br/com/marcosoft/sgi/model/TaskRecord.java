@@ -41,5 +41,13 @@ public class TaskRecord {
         return task.getSistema();
     }
 
+    public boolean isSistemaAlm() {
+        return "ALM".equals(task.getSistema());
+    }
+
+    public boolean isSistemaSgi() {
+        return !isSistemaAlm();
+    }
+
 
 }

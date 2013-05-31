@@ -110,5 +110,10 @@ public class Util {
         }
     }
 
+    public static Calendar addDay(final Calendar date, int days) {
+        final Calendar novaData = (Calendar) date.clone();
+        novaData.add(Calendar.DAY_OF_MONTH, days);
+        return novaData;
+    }
 
 }

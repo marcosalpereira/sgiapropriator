@@ -3,9 +3,10 @@ package br.com.marcosoft.sgi.po;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 
-import br.com.marcosoft.sgi.ErroInesperadoSgi;
+import br.com.marcosoft.sgi.ErroInesperado;
 import br.com.marcosoft.sgi.WaitWindow;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
+import br.com.marcosoft.sgi.util.URLUtils;
 
 import com.thoughtworks.selenium.Selenium;
 import com.thoughtworks.selenium.SeleniumException;
@@ -90,7 +91,7 @@ public class PageObject {
                 }
             } catch (final SeleniumException e) {
                 if (isErroInesperadoSgi()) {
-                    throw new ErroInesperadoSgi();
+                    throw new ErroInesperado();
                 }
                 System.out.println(e);
             }
@@ -121,7 +122,7 @@ public class PageObject {
                 getSelenium().type(locator, value);
             } catch (final SeleniumException e) {
                 if (isErroInesperadoSgi()) {
-                    throw new ErroInesperadoSgi();
+                    throw new ErroInesperado();
                 }
             }
         }
@@ -132,7 +133,7 @@ public class PageObject {
             getSelenium().click(locator);
         } catch (final SeleniumException e) {
             if (isErroInesperadoSgi()) {
-                throw new ErroInesperadoSgi();
+                throw new ErroInesperado();
             }
         }
      }
@@ -200,7 +201,7 @@ public class PageObject {
 
             if (isErroInesperadoSgi()) {
                 waitWindow.dispose();
-                throw new ErroInesperadoSgi();
+                throw new ErroInesperado();
             }
         }
         if (waitWindow != null) {
@@ -290,13 +291,12 @@ public class PageObject {
         return String.format("%s.%d.%d", idTabela, linha, coluna);
     }
 
-
     protected String montarUrlRastreamentoHorasAlm(String projetoAlm, String idItemTrabalho) {
         final String url = String.format(
                 "https://alm.serpro/ccm/web/projects/%s" +
                 "#action=com.ibm.team.workitem.viewWorkItem&id=%s" +
                 "&tab=rastreamentodehoras"
-                , projetoAlm
+                , URLUtils.encode(projetoAlm)
                 , idItemTrabalho);
         return url;
     }
@@ -305,7 +305,7 @@ public class PageObject {
         final String url = String.format(
             "https://alm.serpro/ccm/web/projects/%s" +
                 "#action=com.ibm.team.workitem.viewWorkItem&id=%s"
-                , projetoAlm
+                , URLUtils.encode(projetoAlm)
                 , idItemTrabalho);
         return url;
     }
