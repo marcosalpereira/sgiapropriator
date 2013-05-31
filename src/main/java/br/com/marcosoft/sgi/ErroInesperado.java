@@ -1,6 +1,6 @@
 package br.com.marcosoft.sgi;
 
 @SuppressWarnings("serial")
-public class ErroInesperadoSgi extends RuntimeException {
+public class ErroInesperado extends RuntimeException {
 
 }

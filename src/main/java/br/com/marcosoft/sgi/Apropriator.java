@@ -24,6 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.UIManager;
 
 import org.apache.commons.lang.StringUtils;
@@ -162,7 +164,7 @@ public class Apropriator {
     }
 
     private void iniciarSelenium(Config config, String browserUrl) {
-        final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium");
+        final WaitWindow waitWindow = new WaitWindow("Iniciando Selenium " + browserUrl);
         try {
             SeleniumSupport.initSelenium(config, browserUrl);
         } finally {
@@ -330,7 +332,7 @@ public class Apropriator {
     }
 
     private List<TaskDailySummary> apropriateAlm() {
-        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords("ALM");
+        final List<TaskRecord> tasks = this.apropriationFile.getAlmTasksRecords();
         if (tasks.isEmpty()) {
             return Collections.emptyList();
         }
@@ -386,12 +388,12 @@ public class Apropriator {
     }
 
     private List<TaskDailySummary> apropriateSgi() {
-        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords("SGI");
+        final List<TaskRecord> tasks = this.apropriationFile.getSgiTasksRecords();
         if (tasks.isEmpty()) {
             return Collections.emptyList();
         }
 
-        verifyDefaults(tasks);
+        verifyDefaultsSgi(tasks);
 
         final Config config = apropriationFile.getConfig();
         iniciarSelenium(config, config.getUrlSgi());
@@ -421,7 +423,7 @@ public class Apropriator {
                 progressInfo.setInfoMessage(null);
                 i++;
 
-            } catch (final ErroInesperadoSgi e) {
+            } catch (final ErroInesperado e) {
                 progressInfo.setInfoMessage(
                     "Erro no SGI Detectado. Tentando apropriar novamente mesma atividade!!!");
                 irParaPaginaApropriacao(homePage);
@@ -475,13 +477,17 @@ public class Apropriator {
     }
 
     private OpcoesRecuperacaoAposErro stopAfterException(final RuntimeException e) {
-        final String message = "O seguinte erro ocorreu:" + e.getMessage() + "!";
+        final String message = "O seguinte erro ocorreu:\n" + e.getMessage() + "!";
+        final JTextArea textArea = new JTextArea(10, 60);
+        textArea.setText(message);
+        textArea.setEditable(false);
+        final JScrollPane scrollPane = new JScrollPane(textArea);
 
         final Object[] options = {"Tentar Novamente",
                             "Ir para próxima",
                             "Terminar"};
         final int n = JOptionPane.showOptionDialog(null,
-            message,
+            scrollPane,
             "Erro na apropriação",
             JOptionPane.YES_NO_CANCEL_OPTION,
             JOptionPane.QUESTION_MESSAGE,
@@ -619,7 +625,7 @@ public class Apropriator {
         return null;
     }
 
-    private void verifyDefaults(final List<TaskRecord> tasks) {
+    private void verifyDefaultsSgi(final List<TaskRecord> tasks) {
         final Config config = this.apropriationFile.getConfig();
         final String defaultTipoHora = config.getDefaultTipoHora();
         final String defaultInsumo = config.getDefaultInsumo();
@@ -649,7 +655,8 @@ public class Apropriator {
     private void ajustarUgLotacaoSuperior(final Task task) {
         final String[] split = task.getProjeto().split(";");
         if (split.length > 1) {
-            task.setUgCliente(split[1]);
+            task.setUgCliente(split[0]);
+            task.setProjeto(split[1]);
         }
         task.setLotacaoSuperior(true);
     }
