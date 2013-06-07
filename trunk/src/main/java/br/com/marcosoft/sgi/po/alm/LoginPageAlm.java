@@ -28,7 +28,7 @@ public class LoginPageAlm extends PageObject {
             }
         }
 
-        waitWindow("jazz_app_internal_LoginLogoutArea_0", "Esperando pelo login do usuário");
+        waitForElementPresent("jazz_app_internal_LoginLogoutArea_0", "Esperando pelo login do usuário");
         return new HomePageAlm(password);
     }
 

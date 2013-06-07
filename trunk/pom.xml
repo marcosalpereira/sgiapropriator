@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 	<name>sgi-apropriator</name>
 
-	<version>1.25</version>
+	<version>1.29</version>
 
 	<build>
 		<plugins>

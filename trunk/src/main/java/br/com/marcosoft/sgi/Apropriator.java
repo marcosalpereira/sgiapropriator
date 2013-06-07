@@ -3,12 +3,10 @@ package br.com.marcosoft.sgi;
 
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_DESCRICAO;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_INSUMO;
-import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_LOTACAO_SUPERIOR;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_MACRO;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_NOME_PROJETO;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_TIPO_HORA;
 import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_TIPO_INSUMO;
-import static br.com.marcosoft.sgi.ColunasPlanilha.COL_REG_UG_CLIENTE;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +46,7 @@ import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.ApplicationProperties;
 import br.com.marcosoft.sgi.util.Cipher;
 import br.com.marcosoft.sgi.util.URLUtils;
+import br.com.marcosoft.sgi.util.Util;
 
 /**
  * Apropriar SGI.
@@ -225,8 +224,12 @@ public class Apropriator {
                     sb.append(";");
                 }
                 sb.append(
-                    String.format("%s", aspas(
-                        projeto.getNomeProjeto() + ";" + projeto.getUg())));
+                    String.format("%s",
+                        aspas(
+                            projeto.getUg() + ";" + projeto.getNomeProjeto()
+                        )
+                    )
+                );
             }
             out.print("prj|");
             out.println(sb.toString());
@@ -267,9 +270,6 @@ public class Apropriator {
                 if (task.isDescricaoMudou()) {
                     out.println(String.format("set|%s|%s|%s", COL_REG_DESCRICAO, task.getNumeroLinha(), task.getDescricao()));
                 }
-                if (task.isLotacaoSuperior()) {
-                    out.println(String.format("set|%s|%s|%s", COL_REG_LOTACAO_SUPERIOR, task.getNumeroLinha(), task.isLotacaoSuperior() ? "Sim" : "Não"));
-                }
                 if (task.isTipoHoraMudou()) {
                     out.println(String.format("set|%s|%s|%s", COL_REG_TIPO_HORA, task.getNumeroLinha(), task.getTipoHora()));
                 }
@@ -280,17 +280,14 @@ public class Apropriator {
                 if (task.isMacroMudou()) {
                     out.println(String.format("set|%s|%s|%s", COL_REG_MACRO, task.getNumeroLinha(), task.getMacro()));
                 }
-                if (task.isProjetoMudou()) {
+                if (task.isProjetoMudou() || task.isUgClienteMudou()) {
                     out.println(String.format("alv|%s|%s", COL_REG_NOME_PROJETO ,task.getProjeto()));
-                    out.println(String.format("set|%s|%s|%s", COL_REG_NOME_PROJETO, task.getNumeroLinha(), task.getProjeto()));
+                    out.println(String.format("set|%s|%s|%s", COL_REG_NOME_PROJETO, task.getNumeroLinha(),
+                        task.getUgCliente() + ";" + task.getProjeto()));
                 }
                 if (task.isTipoInsumoMudou()) {
                     out.println(String.format("alv|%s|%s", COL_REG_TIPO_INSUMO ,task.getTipoInsumo()));
                     out.println(String.format("set|%s|%s|%s", COL_REG_TIPO_INSUMO, task.getNumeroLinha(), task.getTipoInsumo()));
-                }
-                if (task.isUgClienteMudou()) {
-                    out.println(String.format("alv|%s|%s", COL_REG_UG_CLIENTE ,task.getUgCliente()));
-                    out.println(String.format("set|%s|%s|%s", COL_REG_UG_CLIENTE, task.getNumeroLinha(), task.getUgCliente()));
                 }
             }
         }
@@ -326,9 +323,64 @@ public class Apropriator {
 
     private void apropriate() {
         final List<TaskDailySummary> tasksSum = new ArrayList<TaskDailySummary>();
-        tasksSum.addAll(apropriateSgi());
-        tasksSum.addAll(apropriateAlm());
+        if (registrosApropriacoesIntegros()) {
+            tasksSum.addAll(apropriateSgi());
+            tasksSum.addAll(apropriateAlm());
+        }
         gravarArquivoRetornoApropriacao(tasksSum);
+    }
+
+    private boolean registrosApropriacoesIntegros() {
+        final Config config = this.apropriationFile.getConfig();
+        final int minimoMinutosApropriacaoDia = config.getMinimoMinutosApropriacaoDia();
+        final int maximoMinutosApropriacaoDia = config.getMaximoMinutosApropriacaoDia();
+
+        final List<TaskRecord> tasks = this.apropriationFile.getTasksRecords();
+        final List<TaskDailySummary> tasksSum = sumAllTasksByDay(tasks);
+
+        final StringBuilder sb = new StringBuilder();
+
+        for (final TaskDailySummary taskDailySummary : tasksSum) {
+            final int sum = taskDailySummary.getSum();
+            if (sum < minimoMinutosApropriacaoDia
+                || sum > maximoMinutosApropriacaoDia) {
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append(
+                    String.format(
+                        "Na data %s o total apropriado é %d",
+                            Util.DD_MM_YY_FORMAT.format(taskDailySummary.getData()),
+                            sum));
+            }
+        }
+
+        if (sb.length() > 0) {
+
+            final String message = String.format(
+                "As apropriações estão fora dos limites aceitáveis.\nVariáveis na aba de configuração da planilha\n\t%s=%d\n\t%s=%d\n%s",
+                config.getChaveMinimoMinutosApropriacaoDia(),
+                minimoMinutosApropriacaoDia,
+                config.getChaveMaximoMinutosApropriacaoDia(),
+                maximoMinutosApropriacaoDia, sb.toString());
+            final JTextArea textArea = new JTextArea(10, 50);
+            textArea.setText(message);
+            textArea.setEditable(false);
+            final JScrollPane scrollPane = new JScrollPane(textArea);
+
+            final Object[] options = {"Confirma", "Cancela"};
+            final int n = JOptionPane.showOptionDialog(null,
+                scrollPane,
+                "Confirme para continuar",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+            return n == 0;
+
+        }
+        return true;
     }
 
     private List<TaskDailySummary> apropriateAlm() {
@@ -606,6 +658,43 @@ public class Apropriator {
 
         return ret;
 
+    }
+
+    private List<TaskDailySummary> sumAllTasksByDay(final List<TaskRecord> activities) {
+
+        final List<TaskDailySummary> ret = new ArrayList<TaskDailySummary>();
+
+        for (final TaskRecord activity : activities) {
+            TaskDailySummary tds = searchData(ret, activity.getData());
+            if (tds == null) {
+                tds = new TaskDailySummary();
+                tds.setData(activity.getData());
+                tds.setSum(activity.getDuracao());
+                ret.add(tds);
+            } else {
+                tds.setSum(tds.getSum() + activity.getDuracao());
+            }
+            tds.getTasks().add(activity.getTask());
+        }
+
+        return ret;
+
+    }
+
+    /**
+     * Search tasks summary for the task and data.
+     * @param tasksSummary tasks summary
+     * @param task task
+     * @param data data
+     * @return
+     */
+    private TaskDailySummary searchData(final List<TaskDailySummary> tasksSummary, final Date data) {
+        for (final TaskDailySummary tds : tasksSummary) {
+            if (tds.getData().equals(data)) {
+                return tds;
+            }
+        }
+        return null;
     }
 
     /**

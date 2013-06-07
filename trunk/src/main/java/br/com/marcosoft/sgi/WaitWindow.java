@@ -21,6 +21,7 @@ import javax.swing.border.LineBorder;
 
 import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 import br.com.marcosoft.sgi.util.MoveMouseListener;
+import br.com.marcosoft.sgi.util.Util;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -40,7 +41,7 @@ public class WaitWindow extends JDialog {
     private final String message;
     private JButton btnSinalizarErro;
 
-    private boolean sinalizouErro;
+    private boolean interrompidoPeloUsuario;
 
     public static void main(String[] args) {
         new WaitWindow("Esperando pelo login do usuário").habilitarSinalizacaoErro();
@@ -87,7 +88,7 @@ public class WaitWindow extends JDialog {
         {
         	btnSinalizarErro = new JButton();
         	jPanel.add(btnSinalizarErro, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 5, 0), 0, 0));
-        	btnSinalizarErro.setText("Sinalizar Erro");
+        	btnSinalizarErro.setText("Interromper Espera");
         	btnSinalizarErro.addActionListener(new ActionListener() {
         		public void actionPerformed(ActionEvent evt) {
         			btnSinalizarErroActionPerformed(evt);
@@ -120,11 +121,42 @@ public class WaitWindow extends JDialog {
     }
 
     private void btnSinalizarErroActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
-    	this.sinalizouErro = true;
+    	this.interrompidoPeloUsuario = true;
     }
 
-    public boolean isSinalizouErro() {
-        return sinalizouErro;
+    public boolean isInterrompidoPeloUsuario() {
+        return interrompidoPeloUsuario;
+    }
+
+    public static interface WaitCondition {
+        boolean satisfied();
+    }
+
+    public static boolean waitForCondition(WaitCondition condition, String message) {
+        WaitWindow waitWindow = null;
+        boolean ret = false;
+        for(int i=0; i<60; i++) {
+            if (condition.satisfied()) {
+                ret = true;
+                break;
+            }
+            if (waitWindow == null && i > 3) {
+                waitWindow = new WaitWindow(message);
+            }
+            if (waitWindow != null) {
+                if (i > 15) {
+                    waitWindow.habilitarSinalizacaoErro();
+                }
+                if (waitWindow.isInterrompidoPeloUsuario()) {
+                    break;
+                }
+            }
+            Util.sleep(1000);
+        }
+        if (waitWindow != null) {
+            waitWindow.dispose();
+        }
+        return ret;
     }
 
 }

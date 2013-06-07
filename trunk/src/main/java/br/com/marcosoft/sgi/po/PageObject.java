@@ -5,13 +5,17 @@ import org.openqa.selenium.WebDriver;
 
 import br.com.marcosoft.sgi.ErroInesperado;
 import br.com.marcosoft.sgi.WaitWindow;
+import br.com.marcosoft.sgi.WaitWindow.WaitCondition;
 import br.com.marcosoft.sgi.selenium.SeleniumSupport;
 import br.com.marcosoft.sgi.util.URLUtils;
+import br.com.marcosoft.sgi.util.Util;
 
 import com.thoughtworks.selenium.Selenium;
 import com.thoughtworks.selenium.SeleniumException;
 
 public class PageObject {
+
+
     /**
      * Time out em segundos.
      */
@@ -48,11 +52,7 @@ public class PageObject {
      * @param millis numero de milisegundos
      */
     public static final void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (final InterruptedException e) {
-            return;
-        }
+        Util.sleep(millis);
     }
 
     /**
@@ -130,6 +130,7 @@ public class PageObject {
 
     protected void click(String locator) {
         try {
+            waitForElement(locator);
             getSelenium().click(locator);
         } catch (final SeleniumException e) {
             if (isErroInesperadoSgi()) {
@@ -186,26 +187,17 @@ public class PageObject {
      * @param locator locator que deve esperar ficar presente
      * @param message mensagem de espera
      */
-    protected void waitWindow(final String locator, final String message) {
-        WaitWindow waitWindow = null;
-        for(;;) {
-            final boolean elementPresent = isElementPresentIgnoreUnhandledAlertException(locator);
-            if (elementPresent) {
-                clearAlertsIgnoreUnhandledAlertException();
-                break;
-            } else {
-                if (waitWindow == null) {
-                    waitWindow = new WaitWindow(message);
-                }
+    protected void waitForElementPresent(final String locator, final String message) {
+        final WaitCondition condition = new WaitCondition() {
+            public boolean satisfied() {
+                return isElementPresentIgnoreUnhandledAlertException(locator);
             }
-
-            if (isErroInesperadoSgi()) {
-                waitWindow.dispose();
-                throw new ErroInesperado();
-            }
-        }
-        if (waitWindow != null) {
-            waitWindow.dispose();
+        };
+        final boolean conditionSatisfied = WaitWindow.waitForCondition(condition, message);
+        clearAlertsIgnoreUnhandledAlertException();
+        if (!conditionSatisfied) {
+            throw new RuntimeException(
+                "Esperava pelo elemento " + locator + " mas ele não apareceu!");
         }
     }
 
