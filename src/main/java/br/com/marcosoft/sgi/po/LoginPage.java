@@ -23,7 +23,7 @@ public class LoginPage extends PageObject {
             }
         }
 
-        waitWindow("menulist", "Esperando pelo login do usuário");
+        waitForElementPresent("menulist", "Esperando pelo login do usuário");
         return new HomePage(password);
     }
 

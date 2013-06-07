@@ -98,7 +98,7 @@ public class ApropriationPage extends PageObject {
 
         click(BTN_INCLUIR);
 
-        waitWindow(AP_DT_AP, "Esperando usuário clicar no ok");
+        waitForElementPresent(AP_DT_AP, "Esperando usuário clicar no ok");
 
         if (!apropriou(data, minutes, task)) {
             final String message =
@@ -196,6 +196,9 @@ public class ApropriationPage extends PageObject {
             if (projetoSimilar != null) {
                 atualizarAtividadeComOpcaoSelecionada(taskDailySummary, AP_SERVICO, projetoSimilar);
                 recoverableSelect(taskDailySummary, "Projeto/Serviço", AP_SERVICO, projetoSimilar);
+            } else {
+                esperarAcaoEscolhaOutraOpcaoSelectPeloUsuario(
+                    taskDailySummary, "Projeto/Serviço", AP_SERVICO);
             }
         }
 
@@ -238,27 +241,32 @@ public class ApropriationPage extends PageObject {
         try {
             select(locator, value);
         } catch (final NotSelectedException e) {
-            final Collection<String> opcoes = new ArrayList<String>();
-            final String ajustarNoSgi = "[Ajustar atividade no SGI]";
-            opcoes.add(ajustarNoSgi);
-            final String[] selectOptions = getSelenium().getSelectOptions(locator);
-            opcoes.addAll(Arrays.asList(selectOptions));
-            opcoes.remove(SELECIONE_UMA_OPCAO);
+            esperarAcaoEscolhaOutraOpcaoSelectPeloUsuario(tds, fieldName, locator);
+        }
+    }
 
-            final String message = String.format(
-                "Não consegui selecionar '%s'. Selecione uma das opções possíveis?", fieldName);
-            final SelectOptionWindow selectOptionWindow = new SelectOptionWindow(message, opcoes);
-            final String selectedOption = selectOptionWindow.getSelectedOption();
-            if (selectedOption == null) {
-                throw new CanceladoPeloUsuarioException();
-            }
-            if (ajustarNoSgi.equals(selectedOption)) {
-                esperarAjustesUsuario("Seleção manual" + fieldName);
-                atualizarAtividadeComInformacoesUsuario(tds);
-            } else {
-                atualizarAtividadeComOpcaoSelecionada(tds, locator, selectedOption);
-                recoverableSelect(tds, fieldName, locator, selectedOption);
-            }
+    private void esperarAcaoEscolhaOutraOpcaoSelectPeloUsuario(TaskDailySummary tds,
+        String fieldName, String locator) {
+        final Collection<String> opcoes = new ArrayList<String>();
+        final String ajustarNoSgi = "[Ajustar atividade no SGI]";
+        opcoes.add(ajustarNoSgi);
+        final String[] selectOptions = getSelenium().getSelectOptions(locator);
+        opcoes.addAll(Arrays.asList(selectOptions));
+        opcoes.remove(SELECIONE_UMA_OPCAO);
+
+        final String message = String.format(
+            "Não consegui selecionar '%s'. Selecione uma das opções possíveis?", fieldName);
+        final SelectOptionWindow selectOptionWindow = new SelectOptionWindow(message, opcoes);
+        final String selectedOption = selectOptionWindow.getSelectedOption();
+        if (selectedOption == null) {
+            throw new CanceladoPeloUsuarioException();
+        }
+        if (ajustarNoSgi.equals(selectedOption)) {
+            esperarAjustesUsuario("Seleção manual" + fieldName);
+            atualizarAtividadeComInformacoesUsuario(tds);
+        } else {
+            atualizarAtividadeComOpcaoSelecionada(tds, locator, selectedOption);
+            recoverableSelect(tds, fieldName, locator, selectedOption);
         }
     }
 

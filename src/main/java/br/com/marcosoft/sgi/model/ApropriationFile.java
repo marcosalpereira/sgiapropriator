@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import br.com.marcosoft.sgi.util.Util;
+
 public class ApropriationFile {
     private final File inputFile;
 
@@ -28,6 +30,10 @@ public class ApropriationFile {
             }
         }
         return tasksRecordsSistema;
+    }
+
+    public List<TaskRecord> getTasksRecords() {
+        return tasksRecords;
     }
 
     public List<TaskRecord> getAlmTasksRecords() {
@@ -167,6 +173,26 @@ public class ApropriationFile {
 
         public String getNomeSubordinado() {
             return System.getProperty(SGI_SUBORDINADO);
+        }
+
+        public int getMinimoMinutosApropriacaoDia() {
+            final String minutos =
+                System.getProperty(getChaveMinimoMinutosApropriacaoDia());
+            return Util.parseInt(minutos, 480 - 80);
+        }
+
+        public String getChaveMinimoMinutosApropriacaoDia() {
+            return "minutosApropriacaoDia.minimo";
+        }
+
+        public String getChaveMaximoMinutosApropriacaoDia() {
+            return "minutosApropriacaoDia.maximo";
+        }
+
+        public int getMaximoMinutosApropriacaoDia() {
+            final String minutos =
+                System.getProperty(getChaveMaximoMinutosApropriacaoDia());
+            return Util.parseInt(minutos, 480);
         }
 
     }

@@ -110,6 +110,14 @@ public class Util {
         }
     }
 
+    public static int parseInt(String str, int errorValue) {
+        try {
+            return Integer.parseInt(str);
+        } catch (final NumberFormatException e) {
+            return errorValue;
+        }
+    }
+
     public static Calendar addDay(final Calendar date, int days) {
         final Calendar novaData = (Calendar) date.clone();
         novaData.add(Calendar.DAY_OF_MONTH, days);

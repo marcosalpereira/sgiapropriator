@@ -3,10 +3,14 @@ package br.com.marcosoft.sgi.po.alm;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import br.com.marcosoft.sgi.WaitWindow;
+import br.com.marcosoft.sgi.WaitWindow.WaitCondition;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskDailySummary;
 import br.com.marcosoft.sgi.po.PageObject;
@@ -32,22 +36,27 @@ public class ApropriationPageAlm extends PageObject {
         irParaSemana(data);
         criarLinhaTempo();
         digitarMinutos(data, qtdMinutos);
-        click("css=button.SaveButtonBottom");
-        verificarMensagemErro();
+        salvarAlteracoes();
 
-        incluirComentario(task, qtdMinutos);
+        incluirComentario(task, data, qtdMinutos);
 
     }
 
-    private void verificarMensagemErro() {
-        if (getSelenium().isElementPresent("css=div.validationMessageError")) {
-            final WebElement element = getWebDriver().findElement(By.className("validationMessageAnchor"));
-            final String text = element.getAttribute("title");
-            throw new RuntimeException(text);
+    private String getErrorMessage() {
+        final WebElement element = getWebDriver().findElement(By.className("validationMessageAnchor"));
+        final String text = element.getAttribute("title");
+        return text;
+    }
+
+    private boolean existsErrorMessage() {
+        return isElementPresent("css=div.validationMessageError", 1);
+    }
+
+    private void incluirComentario(final Task task, Date data, int qtdMinutos) {
+        if (!isParaIncluirAtividadeNaDiscussao()) {
+            return;
         }
-    }
 
-    private void incluirComentario(final Task task, int qtdMinutos) {
         if (task.getDescricao().isEmpty()) {
             return;
         }
@@ -55,9 +64,17 @@ public class ApropriationPageAlm extends PageObject {
         final String url = montarUrlVisaoGeralAlm(task.getProjetoAlm(), task.getIdItemTrabalho());
         getSelenium().open(url);
 
-        final String comentario = task.getDescricao() + " (" +  Util.formatMinutes(qtdMinutos) + ")";
+        final String comentario;
+        if (DateUtils.isSameDay(data, new Date())) {
+            comentario = Util.formatMinutes(qtdMinutos) + " " + task.getDescricao();
+        } else {
+            comentario = Util.DD_MM_YY_FORMAT.format(data) + " " + Util.formatMinutes(qtdMinutos)
+                + " " + task.getDescricao();
+        }
 
         click("link=Incluir Comentário");
+
+        waitForElement("css=iframe.dijitEditorIFrame");
 
         final WebDriver driver = getWebDriver();
         final WebElement fr = driver.findElement(By.className("dijitEditorIFrame"));
@@ -66,22 +83,49 @@ public class ApropriationPageAlm extends PageObject {
         final WebElement element = driver.findElement(By.className("RichTextBody"));
         element.sendKeys(comentario);
 
+        sleep(3000);
+
         driver.switchTo().defaultContent();
         salvarAlteracoes();
     }
 
+    private boolean isParaIncluirAtividadeNaDiscussao() {
+        return System.getProperty("alm.incluirAtividadeNaDiscussao", "Sim")
+            .equalsIgnoreCase("Sim");
+    }
+
     private void salvarAlteracoes() {
-        final WebDriver driver = getWebDriver();
-        final WebElement saveButton = driver.findElement(
-            By.cssSelector("button.SaveButtonBottom"));
-        saveButton.click();
+        click("css=button.SaveButtonBottom");
 
-
-        for (int i = 0; i < 30; i++) {
-            sleep(1000);
-            if (!saveButton.isEnabled()) {
-                break;
+        final WaitCondition condition = new WaitCondition() {
+            public boolean satisfied() {
+                if (existsErrorMessage()) {
+                    return true;
+                }
+                return isSaveButtonDisabled();
             }
+        };
+        final boolean conditionSatisfied = WaitWindow.waitForCondition(
+            condition, "Esperando alterações serem salvas...");
+        if (!conditionSatisfied) {
+            throw new RuntimeException(
+                "Algo inesperado aconteceu quando estava esperando que as alterações fossem gravadas");
+        }
+
+        if (existsErrorMessage()) {
+            throw new RuntimeException(getErrorMessage());
+        }
+
+    }
+
+    private boolean isSaveButtonDisabled() {
+        final WebDriver driver = getWebDriver();
+        try {
+            final WebElement saveButton = driver.findElement(
+                By.cssSelector("button.SaveButtonBottom"));
+            return !saveButton.isEnabled();
+        } catch (final NoSuchElementException e) {
+            return false;
         }
     }
 
@@ -95,8 +139,7 @@ public class ApropriationPageAlm extends PageObject {
         final double valorAtual = Util.parseDouble(preValue, 0);
         final double horaDecimal = qtdMinutos / 60.0;
         final double novoValor = valorAtual + horaDecimal;
-        element.sendKeys(Util.formatMinutesDecimal(novoValor));
-
+        type(horaXpath, Util.formatMinutesDecimal(novoValor));
     }
 
     private void irParaSemana(Date data) {
@@ -111,6 +154,7 @@ public class ApropriationPageAlm extends PageObject {
             } else {
                 irParaSemanaSeguinte();
             }
+            sleep(300);
         }
 
     }
@@ -128,7 +172,7 @@ public class ApropriationPageAlm extends PageObject {
             "//*[@id='Timesheet_weekTextBox']/div[1]/div[1]/div[1]/div[3]/input[2]");
         final Calendar dataInicialPagina = Util.parseCalendar(Util.YYYY_MM_DD_FORMAT, text);
 
-        final Calendar dataFinalPagina = Util.addDay(dataInicialPagina, 7);
+        final Calendar dataFinalPagina = Util.addDay(dataInicialPagina, 6);
 
         if (dataApropriacao.compareTo(dataInicialPagina) == 0) {
             return 0;
