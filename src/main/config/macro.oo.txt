@@ -7,7 +7,8 @@
 '0.7 - Informar se NÃO encontrar arquivo de retorno
 '0.8 - exibir contador ao esperar por arquivo retorno
 '0.9 - capturar projetos
-'1.0 - ler arquivo retorno forcando encode UTF-8  
+'1.0 - ler arquivo retorno forcando encode UTF-8
+'1.1 - suportar ALM
 
 Const VERSION = "1.0"
 
@@ -383,25 +384,27 @@ Sub execImportApp(exportedFile as String)
 
     script = sCurrDir & script
     
-    If FileExists(script) Then 
-        Dim sys As Object
-        Dim jarFile  as String
-        jarFile = getJarFile(sCurrDir)
-        
-        Dim params as String
-        if isLinux() Then
-            params = jarFile & " " & exportedFile
-        Else
-            params = aspas(jarFile) & " " & aspas(exportedFile)
-        End if 
-    
-        sys = CreateUnoService("com.sun.star.system.SystemShellExecute")
-        sys.execute(script, params, 0)
-
-        waitForReturnFile inputFileName
-        importReturnFile inputFileName
-        
+    If Not FileExists(script) Then 
+        MsgBox script + ". Não encontrado!!"
+        Exit sub
     End if
+    
+    Dim sys As Object
+    Dim jarFile  as String
+    jarFile = getJarFile(sCurrDir)
+    
+    Dim params as String
+    if isLinux() Then
+        params = jarFile & " " & exportedFile
+    Else
+        params = aspas(jarFile) & " " & aspas(exportedFile)
+    End if 
+
+    sys = CreateUnoService("com.sun.star.system.SystemShellExecute")
+    sys.execute(script, params, 0)
+
+    waitForReturnFile inputFileName
+    importReturnFile inputFileName
     
 End Sub
 
@@ -487,15 +490,15 @@ End sub
 
 'Recuperar os projetos atuais
 Sub getListaProjetos() As String
-    Dim formulaAnterior as string
-    dim pos as integer
     Dim range as String
     
     oDoc = ThisComponent
     oSheet = oDoc.getSheets.getByIndex(0)
     range = getRangeParaColuna(COL_PROJECT)
     Set CellRange = oSheet.getCellRangeByName(range)
-    getListaProjetos = CellRange.Validation.Formula1
+    Dim projetos As String 
+    projetos = CellRange.Validation.Formula1
+    getListaProjetos = projetos
 
 End sub
 

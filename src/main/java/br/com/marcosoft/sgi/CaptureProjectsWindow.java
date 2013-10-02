@@ -84,7 +84,6 @@ public class CaptureProjectsWindow extends JDialog {
 
     public static void main(String[] args) {
         final Projeto projeto = new Projeto();
-        projeto.setMnemonico("mn");
         projeto.setNomeProjeto("caasa");
 
         final ApropriationPage apropriationPage = new ApropriationPage() {

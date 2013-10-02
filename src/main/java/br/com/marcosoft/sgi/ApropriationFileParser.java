@@ -40,6 +40,7 @@ public class ApropriationFileParser {
     private static final int POS_REG_DIA_SEMANA = 3;
     private static final int POS_REG_AJUSTAR_INFORMACOES = 4;
     private static final int POS_REG_UG_CLIENTE = 5;
+    @SuppressWarnings("unused")
     private static final int POS_REG_LOTACAO_SUPERIOR = 6;
     private static final int POS_REG_NOME_PROJETO = 7;
     private static final int POS_REG_MACRO = 8;
@@ -118,13 +119,29 @@ public class ApropriationFileParser {
         final String projetosStr = fields[POS_PRJ_PROJETOS];
         if (projetosStr.length() == 0) return;
 
-        final String[] projetos = projetosStr.split(";");
+        final String[] projetos = projetosStr.split("\"");
         for (final String prj : projetos) {
-            final Projeto projeto = new Projeto();
-            projeto.setNomeProjeto(prj.replaceAll("\"", ""));
-            ret.getProjects().add(projeto);
+            final Projeto projeto = parseProjeto(prj);
+            if (projeto != null) {
+                ret.getProjects().add(projeto);
+            }
         }
 
+    }
+
+    private Projeto parseProjeto(final String prj) {
+        if (prj.length() > 1) {
+            return null;
+        }
+        final Projeto projeto = new Projeto();
+        final String[] ugAndProjeto = prj.split(";");
+        if (ugAndProjeto.length > 1) {
+            projeto.setUg(ugAndProjeto[0]);
+            projeto.setNomeProjeto(ugAndProjeto[1]);
+        } else {
+            projeto.setNomeProjeto(prj);
+        }
+        return projeto;
     }
 
     private void parseConfig(final ApropriationFile ret, final String[] fields)
@@ -154,9 +171,14 @@ public class ApropriationFileParser {
         task.setAjustarInformacoes("Sim".equals(fields[POS_REG_AJUSTAR_INFORMACOES]));
         task.setSistema(fields[POS_REG_AJUSTAR_INFORMACOES]);
         task.setNumeroLinha(fields[POS_REG_NUMERO_LINHA]);
+
         task.setUgCliente(fields[POS_REG_UG_CLIENTE]);
-        task.setLotacaoSuperior(!"Não".equals(fields[POS_REG_LOTACAO_SUPERIOR]));
-        task.setProjeto(fields[POS_REG_NOME_PROJETO]);
+        final Projeto projeto = parseProjeto(fields[POS_REG_NOME_PROJETO]);
+        task.setProjeto(projeto.getNomeProjeto());
+        if (projeto.getUg() != null) {
+            task.setUgCliente(projeto.getUg());
+        }
+
         task.setMacro(fields[POS_REG_MACRO]);
         task.setTipoHora(fields[POS_REG_TIPO_HORA]);
         task.setInsumo(fields[POS_REG_INSUMO]);
@@ -164,6 +186,8 @@ public class ApropriationFileParser {
         task.setDescricao(fields[POS_REG_DESCRICAO]);
         task.setHoraInicio(fields[POS_REG_HORA_INICIO]);
         task.setHoraTermino(fields[POS_REG_HORA_TERMINO]);
+
+        task.setLotacaoSuperior(true);
         return task;
     }
 
