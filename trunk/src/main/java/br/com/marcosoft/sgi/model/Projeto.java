@@ -4,8 +4,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class Projeto {
-    private String mnemonico;
-
     private String ug;
 
     private boolean lotacaoSuperior;
@@ -17,14 +15,6 @@ public class Projeto {
     }
 
     public Projeto() {
-    }
-
-    public String getMnemonico() {
-        return mnemonico;
-    }
-
-    public void setMnemonico(String mnemonico) {
-        this.mnemonico = mnemonico;
     }
 
     public String getUg() {
