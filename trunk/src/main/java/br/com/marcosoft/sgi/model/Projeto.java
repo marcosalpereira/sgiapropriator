@@ -1,51 +1,51 @@
 package br.com.marcosoft.sgi.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class Projeto {
-    private String ug;
+    private final String dados;
+    private final Map<Integer, String> mapDados = new HashMap<Integer, String>();
 
-    private boolean lotacaoSuperior;
-
-    private String nomeProjeto;
-
-    public Projeto(String nomeProjeto) {
-        this.nomeProjeto = nomeProjeto;
+    public Projeto(String dados) {
+        this.dados = dados;
+        final String[] dadosSplit = dados.split(";");
+        mapear(dadosSplit);
     }
 
-    public Projeto() {
+    private void mapear(final String[] dadosSplit) {
+        mapDados.clear();
+        for (int i = 0; i < dadosSplit.length; i++) {
+            mapDados.put(i, dadosSplit[i]);
+        }
+    }
+    
+    public Projeto(String[] dadosSplit) {
+        this.dados = StringUtils.join(dadosSplit, ";");
+        mapear(dadosSplit);
+    }
+    
+    protected String getDado(int i) {
+        return mapDados.get(i);
+    }
+    
+    protected void setDado(int i, String valor) {
+        mapDados.put(i, valor);
     }
 
-    public String getUg() {
-        return ug;
-    }
-
-    public void setUg(String ug) {
-        this.ug = ug;
-    }
-
-    public boolean isLotacaoSuperior() {
-        return lotacaoSuperior;
-    }
-
-    public void setLotacaoSuperior(boolean lotacaoSuperior) {
-        this.lotacaoSuperior = lotacaoSuperior;
-    }
-
-    public String getNomeProjeto() {
-        return nomeProjeto;
-    }
-
-    public void setNomeProjeto(String nomeProjeto) {
-        this.nomeProjeto = nomeProjeto;
+    public String getDados() {
+        return dados;
     }
 
     @Override
     public String toString() {
-        return this.nomeProjeto;
+        return this.dados;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object obj) {
@@ -54,8 +54,8 @@ public class Projeto {
         }
         if (obj instanceof Projeto) {
             final Projeto that = (Projeto) obj;
-            return new EqualsBuilder().append(this.getNomeProjeto(),
-                that.getNomeProjeto()).isEquals();
+            return new EqualsBuilder().append(this.getDados(),
+                that.getDados()).isEquals();
         }
 
         return false;
@@ -64,7 +64,7 @@ public class Projeto {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(3231, 243871).append(this.getNomeProjeto())
+        return new HashCodeBuilder(3231, 243871).append(this.getDados())
             .toHashCode();
     }
 

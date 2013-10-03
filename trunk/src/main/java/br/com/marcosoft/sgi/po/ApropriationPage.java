@@ -146,7 +146,7 @@ public class ApropriationPage extends PageObject {
     }
 
     private boolean linhaContemApropriacaoTarefa(int linha, String minutes, Task task) {
-        final String projeto = task.getProjeto()
+        final String projeto = task.getNomeProjeto()
             .replaceAll("\\W", "").toLowerCase();
 
         final String minutosPagina = getMinutosApropriados(linha);
@@ -190,9 +190,9 @@ public class ApropriationPage extends PageObject {
     private void selectProject(TaskDailySummary taskDailySummary) {
         final Task task = taskDailySummary.getFirstTask();
         try {
-            select(AP_SERVICO, task.getProjeto());
+            select(AP_SERVICO, task.getNomeProjeto());
         } catch (final NotSelectedException e) {
-            final String projetoSimilar = selecionarProjetoSimilar(task.getProjeto());
+            final String projetoSimilar = selecionarProjetoSimilar(task.getNomeProjeto());
             if (projetoSimilar != null) {
                 atualizarAtividadeComOpcaoSelecionada(taskDailySummary, AP_SERVICO, projetoSimilar);
                 recoverableSelect(taskDailySummary, "Projeto/Serviço", AP_SERVICO, projetoSimilar);
@@ -303,7 +303,7 @@ public class ApropriationPage extends PageObject {
         select(AP_DT_AP, Util.formatDate(data), true, 2);
         fillLotacaoSuperior(task.isLotacaoSuperior());
         select(AP_UG_CLIENTE, task.getUgCliente(), true, 2);
-        select(AP_SERVICO, task.getProjeto(), true, 2);
+        select(AP_SERVICO, task.getNomeProjeto(), true, 2);
         type(AP_HORAS, Util.formatMinutes(qtdMinutos));
         select(AP_MACRO_ATIVIDADE, task.getMacro(), true, 2);
         select(AP_INSUMO, task.getInsumo(), true, 2);
@@ -333,7 +333,7 @@ public class ApropriationPage extends PageObject {
                 task.setMacro(novoValor);
 
             } else if (AP_SERVICO.equals(locator)) {
-                task.setProjeto(novoValor);
+                task.setNomeProjeto(novoValor);
 
             } else if (AP_INSUMO.equals(locator)) {
                 task.setInsumo(novoValor);
@@ -351,9 +351,8 @@ public class ApropriationPage extends PageObject {
 
     private void atualizarAtividadeComInformacoesUsuario(final Task task) {
         task.setControlarMudancas(true);
-        task.setLotacaoSuperior(getSelenium().isChecked(CK_LOT_SUPERIOR));
         task.setUgCliente(getSelenium().getSelectedLabel(AP_UG_CLIENTE));
-        task.setProjeto(getSelenium().getSelectedLabel(AP_SERVICO));
+        task.setNomeProjeto(getSelenium().getSelectedLabel(AP_SERVICO));
         task.setMacro(getSelenium().getSelectedLabel(AP_MACRO_ATIVIDADE));
         task.setInsumo(getSelenium().getSelectedLabel(AP_INSUMO));
         task.setDescricao(getSelenium().getValue(AP_OBS));

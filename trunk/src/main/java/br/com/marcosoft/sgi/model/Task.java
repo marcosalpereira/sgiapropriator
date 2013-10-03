@@ -3,16 +3,14 @@ package br.com.marcosoft.sgi.model;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import br.com.marcosoft.sgi.util.Util;
+
 /**
  * An Task.
  */
 public class Task {
 
-    private String ugCliente;
-
-    private boolean lotacaoSuperior;
-
-    private String projeto;
+    private Projeto projeto;
 
     private String macro;
 
@@ -37,7 +35,7 @@ public class Task {
     }
 
     private boolean isProjetoNaoInformado() {
-        return projeto == null || projeto.trim().length() == 0;
+        return projeto == null || projeto.getDados().trim().length() == 0;
     }
 
     public void setAjustarInformacoes(final boolean ajustarInformacoes) {
@@ -76,34 +74,32 @@ public class Task {
     private boolean descricaoMudou;
 
     public String getId() {
-        return this.descricao + this.ugCliente + this.lotacaoSuperior + this.projeto + this.macro + this.tipoHora
+        return this.descricao + this.projeto + this.macro + this.tipoHora
             + this.insumo + this.tipoInsumo;
     }
 
     public String getUgCliente() {
-        return this.ugCliente;
+        return ((ProjetoSgi) this.projeto).getUg();
     }
-
+    
     public void setUgCliente(final String ugCliente) {
-        this.ugClienteMudou = (this.controlarMudancas && !ugCliente.equals(this.ugCliente));
-        this.ugCliente = ugCliente;
+        final ProjetoSgi projetoSgi = (ProjetoSgi)this.projeto;
+        this.ugClienteMudou = (this.controlarMudancas && !ugCliente.equals(projetoSgi.getUg()));
+        projetoSgi.setUg(ugCliente);
     }
 
-    public boolean isLotacaoSuperior() {
-        return this.lotacaoSuperior;
+    public String getNomeProjeto() {
+        final ProjetoSgi projetoSgi = (ProjetoSgi)this.projeto;
+        return projetoSgi.getNome();
     }
 
-    public void setLotacaoSuperior(final boolean lotacaoSuperior) {
-        this.lotacaoSuperiorMudou = (this.controlarMudancas && !lotacaoSuperior == this.lotacaoSuperior);
-        this.lotacaoSuperior = lotacaoSuperior;
+    public void setNomeProjeto(final String nomeProjeto) {
+        final ProjetoSgi projetoSgi = (ProjetoSgi) this.projeto;
+        this.projetoMudou = (this.controlarMudancas && !nomeProjeto.equals(projetoSgi.getNome()));
+        projetoSgi.setNome(nomeProjeto);
     }
-
-    public String getProjeto() {
-        return this.projeto;
-    }
-
-    public void setProjeto(final String projeto) {
-        this.projetoMudou = (this.controlarMudancas && !projeto.equals(this.projeto));
+    
+    public void setProjeto(Projeto projeto) {
         this.projeto = projeto;
     }
 
@@ -246,14 +242,22 @@ public class Task {
         return this.descricaoMudou;
     }
 
-    public String getProjetoAlm() {
-        final String[] split = projeto.split(";");
-        return split[0];
+    public String getTarefaAlm() {
+        final ProjetoAlm projetoAlm = (ProjetoAlm)this.projeto;
+        return projetoAlm.getTarefa();
     }
 
     public String getIdItemTrabalho() {
-        final String[] split = projeto.split(";");
-        return split[1];
+        final ProjetoAlm projetoAlm = (ProjetoAlm)this.projeto;
+        return projetoAlm.getIdItemTrabalho();
+    }
+
+    public boolean isLotacaoSuperior() {
+        return true;
+    }
+
+    public boolean isSistemaAlm() {
+        return Util.isSistemaAlm(sistema);
     }
 
 

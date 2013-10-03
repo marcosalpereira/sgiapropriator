@@ -268,7 +268,7 @@ public class ProgressInfo extends JFrame {
         txtAtividade.setText(tds.getFirstTask().getDescricao());
         txtDuracao.setText(Util.formatMinutes(tds.getSum()));
         txtMacro.setText(tds.getFirstTask().getMacro());
-        txtProjeto.setText(tds.getFirstTask().getProjeto());
+        txtProjeto.setText(tds.getFirstTask().getNomeProjeto());
     }
 
     public static void main(String[] args) {

@@ -61,7 +61,7 @@ public class ApropriationPageAlm extends PageObject {
             return;
         }
 
-        final String url = montarUrlVisaoGeralAlm(task.getProjetoAlm(), task.getIdItemTrabalho());
+        final String url = montarUrlVisaoGeralAlm(task.getTarefaAlm(), task.getIdItemTrabalho());
         getSelenium().open(url);
 
         final String comentario;

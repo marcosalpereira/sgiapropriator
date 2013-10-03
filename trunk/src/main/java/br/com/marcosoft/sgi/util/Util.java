@@ -123,5 +123,9 @@ public class Util {
         novaData.add(Calendar.DAY_OF_MONTH, days);
         return novaData;
     }
+    
+    public static boolean isSistemaAlm(String sistema) {
+        return "ALM".equals(sistema);
+    }
 
 }

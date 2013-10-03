@@ -42,7 +42,7 @@ public class TaskRecord {
     }
 
     public boolean isSistemaAlm() {
-        return "ALM".equals(task.getSistema());
+        return task.isSistemaAlm();
     }
 
     public boolean isSistemaSgi() {
