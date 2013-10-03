@@ -32,6 +32,7 @@ import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 
 import br.com.marcosoft.sgi.model.Projeto;
+import br.com.marcosoft.sgi.model.ProjetoSgi;
 import br.com.marcosoft.sgi.po.ApropriationPage;
 import br.com.marcosoft.sgi.util.AWTUtilitiesWrapper;
 import br.com.marcosoft.sgi.util.MoveMouseListener;
@@ -83,8 +84,7 @@ public class CaptureProjectsWindow extends JDialog {
     private final ApropriationPage apropriationPage;
 
     public static void main(String[] args) {
-        final Projeto projeto = new Projeto();
-        projeto.setNomeProjeto("caasa");
+        final Projeto projeto = new ProjetoSgi("SUPDE", "SISCON");
 
         final ApropriationPage apropriationPage = new ApropriationPage() {
             @Override
@@ -326,8 +326,7 @@ public class CaptureProjectsWindow extends JDialog {
     }
 
     private void btnAdicionarProjetoActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
-        final Projeto projeto = new Projeto();
-        projeto.setNomeProjeto((String) cboProjetos.getSelectedItem());
+        final Projeto projeto = new ProjetoSgi(txtUgCliente.getText(), (String) cboProjetos.getSelectedItem());
         final DefaultComboBoxModel model = (DefaultComboBoxModel) lstSelecionados.getModel();
         model.addElement(projeto);
     }

@@ -226,7 +226,7 @@ public class Apropriator {
                 sb.append(
                     String.format("%s",
                         aspas(
-                            projeto.getUg() + ";" + projeto.getNomeProjeto()
+                            projeto.getDados()
                         )
                     )
                 );
@@ -281,9 +281,9 @@ public class Apropriator {
                     out.println(String.format("set|%s|%s|%s", COL_REG_MACRO, task.getNumeroLinha(), task.getMacro()));
                 }
                 if (task.isProjetoMudou() || task.isUgClienteMudou()) {
-                    out.println(String.format("alv|%s|%s", COL_REG_NOME_PROJETO ,task.getProjeto()));
+                    out.println(String.format("alv|%s|%s", COL_REG_NOME_PROJETO ,task.getNomeProjeto()));
                     out.println(String.format("set|%s|%s|%s", COL_REG_NOME_PROJETO, task.getNumeroLinha(),
-                        task.getUgCliente() + ";" + task.getProjeto()));
+                        task.getUgCliente() + ";" + task.getNomeProjeto()));
                 }
                 if (task.isTipoInsumoMudou()) {
                     out.println(String.format("alv|%s|%s", COL_REG_TIPO_INSUMO ,task.getTipoInsumo()));
@@ -723,8 +723,6 @@ public class Apropriator {
         for (final TaskRecord tr : tasks) {
             final Task task = tr.getTask();
 
-            ajustarUgLotacaoSuperior(task);
-
             if (task.getTipoHora().length() == 0) {
                 task.setTipoHora(defaultTipoHora);
             }
@@ -739,15 +737,6 @@ public class Apropriator {
                 }
             }
         }
-    }
-
-    private void ajustarUgLotacaoSuperior(final Task task) {
-        final String[] split = task.getProjeto().split(";");
-        if (split.length > 1) {
-            task.setUgCliente(split[0]);
-            task.setProjeto(split[1]);
-        }
-        task.setLotacaoSuperior(true);
     }
 
 }

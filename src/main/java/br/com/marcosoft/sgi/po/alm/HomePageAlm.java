@@ -18,7 +18,7 @@ public class HomePageAlm extends PageObject {
 
     public ApropriationPageAlm gotoApropriationPage(TaskDailySummary tds) {
         final Task task = tds.getFirstTask();
-        final String url = montarUrlRastreamentoHorasAlm(task.getProjetoAlm(), task.getIdItemTrabalho());
+        final String url = montarUrlRastreamentoHorasAlm(task.getTarefaAlm(), task.getIdItemTrabalho());
         getSelenium().open(url);
         return new ApropriationPageAlm();
     }

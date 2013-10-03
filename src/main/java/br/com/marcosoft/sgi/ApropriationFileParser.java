@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 
 import br.com.marcosoft.sgi.model.ApropriationFile;
 import br.com.marcosoft.sgi.model.Projeto;
+import br.com.marcosoft.sgi.model.ProjetoAlm;
+import br.com.marcosoft.sgi.model.ProjetoSgi;
 import br.com.marcosoft.sgi.model.Task;
 import br.com.marcosoft.sgi.model.TaskRecord;
 import br.com.marcosoft.sgi.util.CharsetDetector;
@@ -131,17 +133,9 @@ public class ApropriationFileParser {
 
     private Projeto parseProjeto(final String prj) {
         if (prj.length() > 1) {
-            return null;
+            return new Projeto(prj);
         }
-        final Projeto projeto = new Projeto();
-        final String[] ugAndProjeto = prj.split(";");
-        if (ugAndProjeto.length > 1) {
-            projeto.setUg(ugAndProjeto[0]);
-            projeto.setNomeProjeto(ugAndProjeto[1]);
-        } else {
-            projeto.setNomeProjeto(prj);
-        }
-        return projeto;
+        return null;
     }
 
     private void parseConfig(final ApropriationFile ret, final String[] fields)
@@ -166,19 +160,12 @@ public class ApropriationFileParser {
         return new BufferedReader(inputStreamReader);
     }
 
-    private Task parseTask(final String[] fields) {
+    private Task parseTask(final String[] fields) throws IOException {
         final Task task = new Task();
         task.setAjustarInformacoes("Sim".equals(fields[POS_REG_AJUSTAR_INFORMACOES]));
         task.setSistema(fields[POS_REG_AJUSTAR_INFORMACOES]);
         task.setNumeroLinha(fields[POS_REG_NUMERO_LINHA]);
-
-        task.setUgCliente(fields[POS_REG_UG_CLIENTE]);
-        final Projeto projeto = parseProjeto(fields[POS_REG_NOME_PROJETO]);
-        task.setProjeto(projeto.getNomeProjeto());
-        if (projeto.getUg() != null) {
-            task.setUgCliente(projeto.getUg());
-        }
-
+        task.setProjeto(parseProjeto(fields));
         task.setMacro(fields[POS_REG_MACRO]);
         task.setTipoHora(fields[POS_REG_TIPO_HORA]);
         task.setInsumo(fields[POS_REG_INSUMO]);
@@ -187,8 +174,24 @@ public class ApropriationFileParser {
         task.setHoraInicio(fields[POS_REG_HORA_INICIO]);
         task.setHoraTermino(fields[POS_REG_HORA_TERMINO]);
 
-        task.setLotacaoSuperior(true);
         return task;
+    }
+
+    private Projeto parseProjeto(String[] fields) throws IOException {
+        final String[] dados = fields[POS_REG_NOME_PROJETO].split(";");
+        if (Util.isSistemaAlm(fields[POS_REG_AJUSTAR_INFORMACOES])) {
+            if (dados.length < 2) {
+                throw new IOException(
+                    "Erro lendo projeto ALM: Quantidade de campos difere da esperada!");
+            }
+            return new ProjetoAlm(dados[0], dados[1]);
+        } else {
+            if (dados.length == 2) {
+                return new ProjetoSgi(dados[0], dados[1]);
+            }
+            return new ProjetoSgi(fields[POS_REG_UG_CLIENTE], fields[POS_REG_NOME_PROJETO]);
+        }
+
     }
 
 }
