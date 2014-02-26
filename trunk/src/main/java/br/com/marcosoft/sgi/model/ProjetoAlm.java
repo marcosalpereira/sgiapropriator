@@ -2,12 +2,13 @@ package br.com.marcosoft.sgi.model;
 
 
 public class ProjetoAlm extends Projeto {
-    
+
     public ProjetoAlm(String tarefa, String idItemTrabalho) {
         super(new String[] {tarefa, idItemTrabalho});
     }
 
-    public String getTarefa() {
+    @Override
+    public String getNome() {
         return getDado(0);
     }
 

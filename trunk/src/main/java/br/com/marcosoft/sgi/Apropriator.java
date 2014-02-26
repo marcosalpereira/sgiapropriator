@@ -404,10 +404,10 @@ public class Apropriator {
 
         for (int i=1; i<=tasksSum.size();) {
             final TaskDailySummary tds = tasksSum.get(i-1);
-            final String progresso = i + "/" + tasksSum.size();
-            progressInfo.setInfo(progresso, tds);
-            final ApropriationPageAlm apropriationPage = homePage.gotoApropriationPage(tds);
             try {
+                final String progresso = i + "/" + tasksSum.size();
+                progressInfo.setInfo(progresso, tds);
+                final ApropriationPageAlm apropriationPage = homePage.gotoApropriationPage(tds);
                 apropriationPage.apropriate(tds);
                 tds.setApropriado(true);
                 progressInfo.setInfoMessage(null);
