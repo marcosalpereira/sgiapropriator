@@ -23,16 +23,16 @@ public class Projeto {
             mapDados.put(i, dadosSplit[i]);
         }
     }
-    
+
     public Projeto(String[] dadosSplit) {
         this.dados = StringUtils.join(dadosSplit, ";");
         mapear(dadosSplit);
     }
-    
+
     protected String getDado(int i) {
         return mapDados.get(i);
     }
-    
+
     protected void setDado(int i, String valor) {
         mapDados.put(i, valor);
     }
@@ -45,7 +45,7 @@ public class Projeto {
     public String toString() {
         return this.dados;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object obj) {
@@ -66,6 +66,15 @@ public class Projeto {
     public int hashCode() {
         return new HashCodeBuilder(3231, 243871).append(this.getDados())
             .toHashCode();
+    }
+
+    public String getNome() {
+        throw new IllegalStateException("designless");
+    }
+
+    @SuppressWarnings("unused")
+    public void setNome(String nome) {
+        throw new IllegalStateException("designless");
     }
 
 }

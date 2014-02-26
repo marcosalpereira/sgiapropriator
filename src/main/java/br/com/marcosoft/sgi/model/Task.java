@@ -81,7 +81,7 @@ public class Task {
     public String getUgCliente() {
         return ((ProjetoSgi) this.projeto).getUg();
     }
-    
+
     public void setUgCliente(final String ugCliente) {
         final ProjetoSgi projetoSgi = (ProjetoSgi)this.projeto;
         this.ugClienteMudou = (this.controlarMudancas && !ugCliente.equals(projetoSgi.getUg()));
@@ -89,16 +89,14 @@ public class Task {
     }
 
     public String getNomeProjeto() {
-        final ProjetoSgi projetoSgi = (ProjetoSgi)this.projeto;
-        return projetoSgi.getNome();
+        return projeto.getNome();
     }
 
     public void setNomeProjeto(final String nomeProjeto) {
-        final ProjetoSgi projetoSgi = (ProjetoSgi) this.projeto;
-        this.projetoMudou = (this.controlarMudancas && !nomeProjeto.equals(projetoSgi.getNome()));
-        projetoSgi.setNome(nomeProjeto);
+        this.projetoMudou = (this.controlarMudancas && !nomeProjeto.equals(projeto.getNome()));
+        projeto.setNome(nomeProjeto);
     }
-    
+
     public void setProjeto(Projeto projeto) {
         this.projeto = projeto;
     }
@@ -244,7 +242,7 @@ public class Task {
 
     public String getTarefaAlm() {
         final ProjetoAlm projetoAlm = (ProjetoAlm)this.projeto;
-        return projetoAlm.getTarefa();
+        return projetoAlm.getNome();
     }
 
     public String getIdItemTrabalho() {
