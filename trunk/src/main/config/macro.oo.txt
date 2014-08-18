@@ -9,8 +9,9 @@
 '0.9 - capturar projetos
 '1.0 - ler arquivo retorno forcando encode UTF-8
 '1.1 - suportar ALM
-
-Const VERSION = "1.1"
+'1.2 - exportar atividades já apropriadas
+'1.3 - Limpar ate a linha selecionada
+Const VERSION = "1.3"
 
 Const COL_REG = 0
 Const COL_DATE = 1
@@ -173,13 +174,29 @@ sub duplicate
     
 end sub
 
+sub getSelectedRow() as integer
+    dim row as integer    
+    row = -1 
+    on error resume next
+    row = ThisComponent.CurrentSelection.CellAddress.row
+    getSelectedRow = row
+end sub
+
 
 'Limpar todos os dados registrados
 sub clean
     Dim linhasDados(MAX_ROW, COL_LAST) as String
     Dim idxLinhasDados as Integer
+    dim selectedRow as integer
 
     showStatusBar "Limpando atividades apropriadas..."
+    
+    selectedRow = getSelectedRow()
+    if (selectedRow > FIRST_ROW) Then
+        if (msgbox("Limpar atividades já apropriadas até a linha " & selectedRow + 1, 1) = 2) Then
+           exit sub
+        End if
+    End if
    
     'Salvar as nao apropriadas
     idxLinhasDados = -1
@@ -187,7 +204,8 @@ sub clean
       if (getText(COL_DATE, row) = "") Then
          exit for
       End if
-      if (getText(COL_REG, row) <> "Sim") Then
+
+      if (getText(COL_REG, row) <> "Sim" or (selectedRow > 0 And row > selectedRow)) Then
         idxLinhasDados = idxLinhasDados + 1       
         for col = 0 to COL_LAST
              linhasDados(idxLinhasDados, col) = getText(col, row)
